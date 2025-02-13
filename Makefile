@@ -95,3 +95,71 @@ toy:
 		number=`expr $$number + 16` ; \
 	done
 
+streamspot_test: sb
+	cd ../../data && mkdir -p train_toy
+	number=0 ; while [ $$number -le 99 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/toy_data/base_train/base-toy-$$number.txt stream ../../data/toy_data/stream_train/stream-toy-$$number.txt decay 3000 lambda 0.02 batch 2000 sketch ../../data/train_toy/sketch-toy-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/toy_data/base_train/base-toy-$$number.txt.* ; \
+		rm -rf ../../data/toy_data/base_train/base-toy-$$number.txt_* ; \
+		number=`expr $$number + 4` ; \
+	done
+	cd ../../data && mkdir -p test_toy
+	number=300 ; while [ $$number -le 399 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/toy_data/base_test/base-attack-$$number.txt stream ../../data/toy_data/stream_test/stream-attack-$$number.txt decay 3000 lambda 0.02 batch 2000 sketch ../../data/test_toy/sketch-attack-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/toy_data/base_test/base-attack-$$number.txt.* ; \
+		rm -rf ../../data/toy_data/base_test/base-attack-$$number.txt_* ; \
+		number=`expr $$number + 16` ; \
+	done
+	
+evasion_mimicry_org_batch: sb
+	cd ../../data && mkdir -p train_mimicry_evasion_org_batch
+	number=0 ; while [ $$number -le 74 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_train/mimicry-benign-$$number.txt stream ../../data/mimicry_data_parsed/stream_train/stream-benign-$$number.txt decay 3000 lambda 0.02 batch 2000 sketch ../../data/train_mimicry_evasion_org_batch/sketch-mimicry_benign-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/mimicry_data_parsed/base_train/mimicry-benign-$$number.txt.* ; \
+		rm -rf ../../data/mimicry_data_parsed/base_train/mimicry-benign-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+	cd ../../data && mkdir -p test_mimicry_evasion_org_batch
+	number=0 ; while [ $$number -le 99 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-evasion-$$number.txt decay 3000 lambda 0.02 batch 2000 sketch ../../data/test_mimicry_evasion_org_batch/sketch-evasion-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt.* ; \
+		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+	
+train_mimicry: sb
+	cd ../../data && mkdir -p train_mimicry_evasion
+	number=0 ; while [ $$number -le 74 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_train/mimicry-benign-$$number.txt stream ../../data/mimicry_data_parsed/stream_train/stream-benign-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/train_mimicry_evasion/sketch-mimicry_benign-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/mimicry_data_parsed/base_train/mimicry-benign-$$number.txt.* ; \
+		rm -rf ../../data/mimicry_data_parsed/base_train/mimicry-benign-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+evasion_mimicry: sb
+		cd ../../data && mkdir -p test_mimicry_evasion
+	number=0 ; while [ $$number -le 99 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-evasion-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/test_mimicry_evasion/sketch-evasion-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt.* ; \
+		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+attack_mimicry: sb
+	cd ../../data && mkdir -p test_mimicry_attack
+	number=0 ; while [ $$number -le 99 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-attack-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/test_mimicry_attack/sketch-attack-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt.* ; \
+		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+benign_mimicry: sb
+	cd ../../data && mkdir -p test_mimicry_benign
+	number=1 ; while [ $$number -le 24 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-benign-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-benign-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/test_mimicry_benign/sketch-benign-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-benign-$$number.txt.* ; \
+		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-benign-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
