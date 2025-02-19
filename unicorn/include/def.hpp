@@ -19,6 +19,7 @@
 #include <cmath>
 #include <pthread.h> 
 #include <string>
+#include <set>
 
 /* NOTE: SKETCH_SIZE and K_HOPS are compilation
  * constant defined using -D flags. */
@@ -81,6 +82,7 @@ typedef struct edge_label {
     int itr;
     bool new_src;
     bool new_dst;
+    std::set<long> roots;
 } EdgeDataType;
 
 /* Node remembers all its most-updated labels "lb" and timestamps "tm".
@@ -89,6 +91,7 @@ typedef struct node_label {
     unsigned long lb[K_HOPS+1];
     unsigned long tm[K_HOPS+1];
     bool is_leaf;
+    std::set<long> roots;
 } VertexDataType;
 
 /* Each histogram element is associated with r, beta, c, which

@@ -60,6 +60,7 @@ namespace graphchi {
 			graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 			EdgeDataType el = in_edge->get_data();
 			el.itr++; /* After this initialization, every edge in the base graph has "itr" value 1. */
+			nl.roots.insert(el.roots.begin(), el.roots.end()); // Add incoming roots
 			in_edge->set_data(el);
 		    }
 		} else {
@@ -68,12 +69,13 @@ namespace graphchi {
                     graphchi_edge<EdgeDataType> * edge = vertex.random_outedge();
                     nl.lb[0] = edge->get_data().src[0];
                     nl.is_leaf = true;
+					nl.roots.insert(vertex.id()); //add itself as root
 		}
 		nl.tm[0] = 0; /* The first timestamp associated with a vertex is always zero. */
 		vertex.set_data(nl);
 
 		/* Populate the histogram. */
-		hist->update(nl.lb[0], true);
+		hist->update(nl.lb[0], true, vertex.get_data().roots);
 
 		/* Schedule itself for the next iteration. */
 		if (gcontext.scheduler != NULL) {
@@ -101,11 +103,11 @@ namespace graphchi {
 		 * the concatenated string. That is, we may add multiple entries to the map 
 		 * for one string. */
                 std::vector<EdgeDataType> neighborhood; /* We reuse edge_label struct vector to store the neighborhood values. */
-		for (int i = 0; i < vertex.num_inedges(); i++) {
+		for (int i = 0; i < vertex.num_inedges(); i++) { //TODO: changes needed here?
                     graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 		    EdgeDataType el = in_edge->get_data();
 		    assert(el.itr == gcontext.iteration);	/* During base graph iteration, edge itr value should be the same as gcontext iteration value before the update. */
-		    neighborhood.push_back(el);
+		    neighborhood.push_back(el); // add edges to be processed again
 		    /* We will use those edges so increment the itr count by 1 and update the edge. */
 		    el.itr++;
 		    in_edge->set_data(el);
@@ -122,7 +124,7 @@ namespace graphchi {
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
 #endif
 		    /* Populate the histogram. */
-		    hist->update(last_itr_label, true);
+		    hist->update(last_itr_label, true, vertex.get_data().roots);
 		    /* Update the vertex's label vector. */
 		    nl.lb[gcontext.iteration] = last_itr_label;
 		    nl.tm[gcontext.iteration] = 0; /* All timestamps of the leaf vertex is set to be 0. */
@@ -137,6 +139,7 @@ namespace graphchi {
 			out_edge->set_data(el);
 		    }
 		} else {
+			//TODO: add roots in label createion, mb hash the set and add at the front of string
 		    /* We first sort the labels based on the timestamps of the in_edges.
 		     * Note that the neighborhood only contains edges of the base graph. */
 		    std::sort(neighborhood.begin(), neighborhood.end(), EdgeSorter(gcontext.iteration - 1));
@@ -169,11 +172,11 @@ namespace graphchi {
 		    unsigned long new_label = hash((unsigned char *)new_label_str.c_str());
 		    /* Populate the histogram, depending if we CHUNKIFY or not. */
 		    if (!CHUNKIFY) {
-			hist->update(new_label, true);
+			hist->update(new_label, true, vertex.get_data().roots);
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			for (std::vector<unsigned long>::iterator ti = to_insert.begin(); ti != to_insert.end(); ++ti)
-			    hist->update(*ti, true);
+			    hist->update(*ti, true, vertex.get_data().roots);
 		    }
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "New label of vertex (" << vertex.id() << "): " << new_label << std::endl;
@@ -238,6 +241,7 @@ namespace graphchi {
 			VertexDataType nl;
 			nl.lb[0] = el.src[0];
 			nl.tm[0] = 0;
+			nl.roots.insert(vertex.id());
 			/* Since the node has no incoming edges, all of its labels 
 			 * are the same as the initial label. All of its timestamps
 			 * are set to 0. */
@@ -251,7 +255,7 @@ namespace graphchi {
 			/* Populate the histogram for all its labels (hops). */
 			for (int i = 0; i < K_HOPS + 1; i++) {
 			    hist->decay(SFP);
-			    hist->update(nl.lb[i], false);
+			    hist->update(nl.lb[i], false, vertex.get_data().roots);
 			}
 			/* Populate the labels to all of its out-going edges. */
 			for (int i = 0; i < vertex.num_outedges(); i++) {
@@ -261,6 +265,8 @@ namespace graphchi {
 				el.src[j] = nl.lb[j];
 				/* Update the timestamps. */
 				el.tme[j] = el.tme[j - 1];
+				//update roots
+				el.roots.insert(nl.roots.begin(), nl.roots.end());
 			    }
 			    el.new_src = false; /* Make sure every edge is marked as seen. */
 			    out_edge->set_data(el);
@@ -276,7 +282,7 @@ namespace graphchi {
 			VertexDataType nl = vertex.get_data();
 			nl.lb[0] = edge->get_data().dst;
 			nl.tm[0] = 0;
-			vertex.set_data(nl);
+			//vertex.set_data(nl); //TODO: moved further down
 			
 			for (int i = 0; i < vertex.num_inedges(); i++) {
 			    graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
@@ -285,21 +291,24 @@ namespace graphchi {
 			    assert(el.itr == 0);
 			    el.itr++; /* After this initialization, every new edge has "itr" value 1. */
 			    el.new_dst = false; /* We make sure next iteration, we won't count the node as a new node. */
-			    in_edge->set_data(el);
-			}
+			    nl.roots.insert(el.roots.begin(), el.roots.end()); //populate roots for non-new nodes
+				in_edge->set_data(el);
+				}
+			vertex.set_data(nl);
 
 			for (int i = 0; i < vertex.num_outedges(); i++) {
 			    graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
 			    EdgeDataType el = out_edge->get_data();
 			    el.new_src = false; /* We make sure next iteration, we won't count the node as a new node. */
-			    out_edge->set_data(el);
+				el.roots.insert(nl.roots.begin(), nl.roots.end());
+				out_edge->set_data(el);
 			}
 #ifdef DEBUG
 			logstream(LOG_DEBUG) << "Vertex (" << vertex.id() << ") label: " << nl.lb[0] << std::endl;
 #endif
 			/* Populate histogram map. */
 			hist->decay(SFP);
-			hist->update(nl.lb[0], false);
+			hist->update(nl.lb[0], false, vertex.get_data().roots);
 		    }
 		}
 		/* The node is known to the system. */
@@ -321,6 +330,7 @@ namespace graphchi {
 			    el.src[j] = nl.lb[j];
 			    el.tme[j] = el.tme[j - 1];
 			}
+			el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
 			out_edge->set_data(el);
 		    }
 #ifdef DEBUG
@@ -344,12 +354,14 @@ namespace graphchi {
 			    el.src[j] = nl.lb[j];
 			    el.tme[j] = nl.tm[j];
 			}
+			el.roots.insert(nl.roots.begin(), nl.roots.end());
 			out_edge->set_data(el);
 		    }
 		    /* Change all incoming edges whose itr count is 0 to 1.
 		     * At the same time, find the minimum itr among all inedges.*/
 		    int min_itr = K_HOPS + 2; /* no itr value in our K_HOPS-hop case can be larger than K_HOPS + 2. */
 		    for (int i = 0; i < vertex.num_inedges(); i++) {
+			//TODO: do we need to change someting here?
 			graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 			EdgeDataType el = in_edge->get_data();
 			if (el.itr == 0) {
@@ -411,9 +423,10 @@ namespace graphchi {
 		    logstream(LOG_DEBUG) << "New label of the vertex (" << vertex.id() << "): " << new_label << std::endl;
 #endif
 		    /* Populate the histogram. */
+			//TODO
 		    if (!CHUNKIFY) {
 			hist->decay(SFP);
-			hist->update(new_label, false);
+			hist->update(new_label, false, vertex.get_data().roots);
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			bool first = true;
@@ -422,7 +435,7 @@ namespace graphchi {
 				hist->decay(SFP);  /* Only decay once. */
 				first = false;
 			    }
-			    hist->update(*ti, false);
+			    hist->update(*ti, false,vertex.get_data().roots );
 			}
 		    }
 		    /* Update the vertex's label*/
