@@ -75,7 +75,7 @@ unicorn/% : unicorn/%.cpp $(HEADERS)
 swdebug: CPPFLAGS += -DSKETCH_SIZE=2000 -DK_HOPS=3 -DMEMORY -DPREGEN=10000 -DUSEWINDOW -DBASESKETCH -DDEBUG -g
 swdebug: unicorn/main
 
-sb: CPPFLAGS += -DSKETCH_SIZE=2000 -DK_HOPS=3 -DMEMORY -DPREGEN=10000 -g
+sb: CPPFLAGS += -DSKETCH_SIZE=2000 -DK_HOPS=3 -DMEMORY -DPREGEN=10000 -DROOTS=5 -g
 sb: unicorn/main
 
 ######################Unicorn Toy Example################################################

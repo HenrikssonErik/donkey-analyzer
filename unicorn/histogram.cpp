@@ -91,21 +91,7 @@ int minRoots = 100;
 /* Insert @label to the histogram if it does not exist; otherwise, update its value.
  * If @base true, we do not update hash value; we only update them during streaming.
  * We do not decay the histogram or the sketch in this function. */
-void Histogram::update(unsigned long label, bool base, const std::set<long>& roots) {
-    if (roots.size() > maxRoots){
-        maxRoots = roots.size();
-        std::cout << "maxRoots updated to: " << maxRoots << std::endl;
-    }
-    if (roots.size() < minRoots){
-        minRoots = roots.size();
-        std::cout << "minRoots updated to: " << minRoots << std::endl;
-    }
-
-    std::cout << "roots: ";  // Print "roots" before the set values
-    for (long root : roots) {
-        std::cout << root << " ";
-    }
-    std::cout << std::endl;
+void Histogram::update(unsigned long label, bool base, unsigned long roots) {
 
     this->histogram_map_lock.lock();
     /* We add the new element or update the existing element in the

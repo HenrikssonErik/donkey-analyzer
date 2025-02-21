@@ -20,6 +20,7 @@
 #include <pthread.h> 
 #include <string>
 #include <set>
+#include <cstdint>
 
 /* NOTE: SKETCH_SIZE and K_HOPS are compilation
  * constant defined using -D flags. */
@@ -52,7 +53,6 @@ extern FILE * SFP;
  * visualization only since file I/O is costly. */
 extern std::string HIST_FILE;
 #endif
-
 /* In a streaming setting, GraphChi does not allow dynamic vertex/edge type.
  * We therefore must fixed the neighborhood we are exploring.
  * Currently we implement K_HOPS neighborhood.
@@ -82,7 +82,7 @@ typedef struct edge_label {
     int itr;
     bool new_src;
     bool new_dst;
-    std::set<long> roots;
+    uint32_t roots[ROOTS*2]; //every second value is for when the root was created
 } EdgeDataType;
 
 /* Node remembers all its most-updated labels "lb" and timestamps "tm".
@@ -91,7 +91,7 @@ typedef struct node_label {
     unsigned long lb[K_HOPS+1];
     unsigned long tm[K_HOPS+1];
     bool is_leaf;
-    std::set<long> roots;
+    uint32_t roots[ROOTS*2];
 } VertexDataType;
 
 /* Each histogram element is associated with r, beta, c, which
