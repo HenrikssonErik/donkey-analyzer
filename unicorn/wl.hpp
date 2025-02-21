@@ -29,6 +29,8 @@
 #include "include/helper.hpp"
 #include "include/histogram.hpp"
 #include <cstdint>
+#include <unordered_set>
+#include <algorithm>
 
 namespace graphchi {
     /* GraphChi programs need to subclass GraphChiProgram<vertex-type, edge-type> 
@@ -580,16 +582,19 @@ namespace graphchi {
 			uint32_t order;
 		};
 	
-		std::vector<RootPair> validPairs;  // Store non-zero pairs
+		std::vector<RootPair> validPairs;  // Store non-zero unique pairs
 		std::vector<RootPair> zeroPairs;   // Store zero pairs
+		std::unordered_set<uint32_t> seenRoots; // Track unique root values
 	
-		// Step 1: Extract root-order pairs
+		// Step 1: Extract unique root-order pairs
 		for (size_t i = 0; i < ROOTS * 2; i += 2) {
 			RootPair pair = {fromArray[i], fromArray[i + 1]};
+	
 			if (pair.root == 0) {
 				zeroPairs.push_back(pair);  // Store zero values separately
-			} else {
-				validPairs.push_back(pair);  // Store valid values
+			} else if (seenRoots.find(pair.root) == seenRoots.end()) {
+				seenRoots.insert(pair.root);  // Mark root as seen
+				validPairs.push_back(pair);   // Store unique valid values
 			}
 		}
 	
@@ -598,7 +603,7 @@ namespace graphchi {
 			return a.order < b.order;
 		});
 	
-		// Step 3: Merge sorted valid pairs and zero pairs
+		// Step 3: Merge sorted valid pairs and zero pairs into updateArray
 		size_t index = 0;
 		for (const auto& pair : validPairs) {  // Add sorted non-zero pairs
 			updateArray[index++] = pair.root;
