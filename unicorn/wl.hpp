@@ -80,7 +80,7 @@ namespace graphchi {
                     nl.is_leaf = true;
 					//nl.roots[0] = vertex.id(); //add itself as root
 					//nl.roots[1] = rootOrder; //add its order
-					updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: this seem to be the wrong place to do this. Maybe do it in the second iteration?
+					//updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: might  be the wrong place to do this. Maybe do it in the second iteration?
 		}
 		nl.tm[0] = 0; /* The first timestamp associated with a vertex is always zero. */
 		vertex.set_data(nl);
@@ -116,13 +116,14 @@ namespace graphchi {
 		 * the concatenated string. That is, we may add multiple entries to the map 
 		 * for one string. */
                 std::vector<EdgeDataType> neighborhood; /* We reuse edge_label struct vector to store the neighborhood values. */
-		for (int i = 0; i < vertex.num_inedges(); i++) { //TODO: changes needed here?
+		for (int i = 0; i < vertex.num_inedges(); i++) {
                     graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 		    EdgeDataType el = in_edge->get_data();
 		    assert(el.itr == gcontext.iteration);	/* During base graph iteration, edge itr value should be the same as gcontext iteration value before the update. */
 		    neighborhood.push_back(el); // add edges to be processed again
 		    /* We will use those edges so increment the itr count by 1 and update the edge. */
 		    el.itr++;
+			updateRoots(vertex.get_data().roots, el.roots);
 		    in_edge->set_data(el);
 		}
 		VertexDataType nl = vertex.get_data();
@@ -133,6 +134,7 @@ namespace graphchi {
 		     * is_leaf == true.  Simply use the last label of the vertex
 		     * itself since it has no incoming neighbors. */
 		    unsigned long last_itr_label = nl.lb[gcontext.iteration - 1];
+			updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: testing to add it here instead
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
 #endif
@@ -695,6 +697,5 @@ namespace graphchi {
 		roots[0] = rootToAdd;
 		roots[1] = rootOrder;  // Safely assign rootOrder to the array
 	}
-	
 };
 }
