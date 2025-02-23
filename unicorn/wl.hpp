@@ -77,9 +77,9 @@ namespace graphchi {
                     graphchi_edge<EdgeDataType> * edge = vertex.random_outedge();
                     nl.lb[0] = edge->get_data().src[0];
                     nl.is_leaf = true;
-					nl.roots[0] = vertex.id(); //add itself as root
+					//nl.roots[0] = vertex.id(); //add itself as root
 					//nl.roots[1] = rootOrder; //add its order
-					updateRootOrderAndAddToRoots(nl.roots); //TODO: this seem to be the wrong place to do this. Maybe do it in the second iteration?
+					updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: this seem to be the wrong place to do this. Maybe do it in the second iteration?
 		}
 		nl.tm[0] = 0; /* The first timestamp associated with a vertex is always zero. */
 		vertex.set_data(nl);
@@ -678,13 +678,23 @@ namespace graphchi {
 		return result;
 	}
 
-	void updateRootOrderAndAddToRoots(uint32_t roots[]) {
+	void updateRootOrderAndAddToRoots(uint32_t roots[], uint32_t rootToAdd) {
+		static std::unordered_map<uint32_t, uint32_t> seenRoots;  // Map to store roots and their corresponding rootOrder
+	
 		std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
 	
-		rootOrder++;  // Safely increment rootOrder
-		logstream(LOG_INFO) << "Updated rootOrder: " << rootOrder << std::endl;
-	
+		// Check if the root already exists in the set, if so use the existing rootOrder
+		if (seenRoots.find(rootToAdd) != seenRoots.end()) {
+			rootOrder = seenRoots[rootToAdd];  // Use the existing rootOrder for this root
+		} else {
+			rootOrder++;  // Safely increment rootOrder
+			seenRoots[rootToAdd] = rootOrder;  // Store the new root and its rootOrder in the map
+			logstream(LOG_INFO) << "Updated rootOrder: " << rootOrder << std::endl;
+		}
+		
+		roots[0] = rootToAdd;
 		roots[1] = rootOrder;  // Safely assign rootOrder to the array
 	}
+	
 };
 }
