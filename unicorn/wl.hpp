@@ -80,7 +80,7 @@ namespace graphchi {
                     nl.is_leaf = true;
 					//nl.roots[0] = vertex.id(); //add itself as root
 					//nl.roots[1] = rootOrder; //add its order
-					//updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: might  be the wrong place to do this. Maybe do it in the second iteration?
+					updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: might  be the wrong place to do this. Maybe do it in the second iteration?
 		}
 		nl.tm[0] = 0; /* The first timestamp associated with a vertex is always zero. */
 		vertex.set_data(nl);
@@ -134,7 +134,7 @@ namespace graphchi {
 		     * is_leaf == true.  Simply use the last label of the vertex
 		     * itself since it has no incoming neighbors. */
 		    unsigned long last_itr_label = nl.lb[gcontext.iteration - 1];
-			updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: testing to add it here instead
+			//updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: testing to add it here instead
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
 #endif
