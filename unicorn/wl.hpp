@@ -35,7 +35,7 @@
 
 
 std::mutex rootOrderMutex;
-		int rootOrder = 1;
+		uint32_t rootOrder = 1;
 	
 namespace graphchi {
     /* GraphChi programs need to subclass GraphChiProgram<vertex-type, edge-type> 
