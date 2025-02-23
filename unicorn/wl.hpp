@@ -619,7 +619,7 @@ namespace graphchi {
 		std::string result;
 		bool firstElement = true; 
 
-		for (size_t i = 0; i < ROOTS; i++) {
+		for (size_t i = 0; i < ROOTS*2-1; i+2) {
 			if (roots[i] == 0) continue;  // Skip zero values
 
 			if (!firstElement) {
@@ -628,7 +628,7 @@ namespace graphchi {
 				firstElement = false;  // Mark that the first element has been added
 			}
 
-			result += std::to_string(roots[i]);  // Convert number to string
+			result += std::to_string(roots[i]) + ":" + std::to_string(roots[i+1]);  // Convert number to string
 		}
 		printWithMutex("Iterating over roots array: ");
 		printWithMutex(result);  // Print the value
