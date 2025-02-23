@@ -568,14 +568,7 @@ namespace graphchi {
 		roots[ROOTS - 2] = 0;
 		roots[ROOTS - 1] = 0;  // Leave a gap at the end
 	}
-
-	std::mutex printMutex;  // Mutex for thread-safe printing
-
-	void printWithMutex(const std::string& message) {
-		std::lock_guard<std::mutex> lock(printMutex);
-		std::cout << message;
-	}
-
+	
 	void updateRoots(uint32_t updateArray[], uint32_t fromArray[]) {
 		struct RootPair {
 			uint32_t root;
@@ -619,7 +612,7 @@ namespace graphchi {
 		std::string result;
 		bool firstElement = true; 
 
-		for (size_t i = 0; i < ROOTS*2-1; i+2) {
+		for (size_t i = 0; i < ROOTS*2-1; i+=2) {
 			if (roots[i] == 0) continue;  // Skip zero values
 
 			if (!firstElement) {
@@ -630,9 +623,7 @@ namespace graphchi {
 
 			result += std::to_string(roots[i]) + ":" + std::to_string(roots[i+1]);  // Convert number to string
 		}
-		printWithMutex("Iterating over roots array: ");
-		printWithMutex(result);  // Print the value
-		printWithMutex("\n");
+		logstream(LOG_INFO) << "Iterating over roots array: " << result << std::endl;
 		return result;
 	}
     };
