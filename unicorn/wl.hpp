@@ -661,7 +661,7 @@ namespace graphchi {
 		std::string result;
 		bool firstElement = true;
 		static int runCount = 0;  // Persistent counter across function calls
-    	runCount++; 
+    	//runCount++; 
 
 		for (size_t i = 0; i < ROOTS*2-1; i+=2) {
 			if (roots[i] == 0) continue;  // Skip zero values
@@ -674,10 +674,10 @@ namespace graphchi {
 
 			result += std::to_string(roots[i]) + ":" + std::to_string(roots[i+1]);  // Convert number to string
 		}
-		if (runCount > 1000) {
+		/*if (runCount > 1000) {
 			logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
 			runCount = 0;
-		}
+		} */
 		return result;
 	}
 

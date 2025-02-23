@@ -98,7 +98,7 @@ void Histogram::update(unsigned long label, bool base, unsigned long roots) {
      * histogram. This is done both in base and stream graph. */
     std::pair<std::map<unsigned long, double>::iterator, bool> rst;
     double counter = 1;
-    rst = this->histogram_map.insert(std::pair<unsigned long, double>(label, counter));
+    rst = this->histogram_map.insert(std::pair<unsigned long, double>(roots + label, counter));
     if (rst.second == false) {
 #ifdef DEBUG
         logstream(LOG_DEBUG) << "The label " << label << " is already in the map. Updating the sketch and its hash..." << std::endl;
