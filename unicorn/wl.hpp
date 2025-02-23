@@ -32,14 +32,16 @@
 #include <unordered_set>
 #include <algorithm>
 
+
+std::mutex rootOrderMutex;
+		int rootOrder = 1;
+
 namespace graphchi {
     /* GraphChi programs need to subclass GraphChiProgram<vertex-type, edge-type> 
      * class. The main logic is usually in the update function. */
     struct WeisfeilerLehman : public GraphChiProgram<VertexDataType, EdgeDataType> {
         /* Get the histogram singleton. */
         Histogram* hist = Histogram::get_instance();
-		std::mutex rootOrderMutex;
-		int rootOrder = 1;
 
         /* Vertex update function. */
         void update(graphchi_vertex<VertexDataType, EdgeDataType> &vertex, graphchi_context &gcontext) {
@@ -66,7 +68,7 @@ namespace graphchi {
 			EdgeDataType el = in_edge->get_data();
 			el.itr++; /* After this initialization, every edge in the base graph has "itr" value 1. */
 			//nl.roots.insert(el.roots.begin(), el.roots.end()); // Add incoming roots
-			updateRoots(nl.roots, el.roots);
+			updateRoots(nl.roots, el.roots); //TODO: optimize by saving all roots in a set since their number is static and update nl roots once instead of every iteration
 			in_edge->set_data(el);
 		    }
 		} else {
@@ -76,8 +78,8 @@ namespace graphchi {
                     nl.lb[0] = edge->get_data().src[0];
                     nl.is_leaf = true;
 					nl.roots[0] = vertex.id(); //add itself as root
-					nl.roots[1] = rootOrder; //add its order
-					updateRootOrder();
+					//nl.roots[1] = rootOrder; //add its order
+					updateRootOrderAndAddToRoots(nl.roots);
 		}
 		nl.tm[0] = 0; /* The first timestamp associated with a vertex is always zero. */
 		vertex.set_data(nl);
@@ -314,7 +316,7 @@ namespace graphchi {
 			    el.itr++; /* After this initialization, every new edge has "itr" value 1. */
 			    el.new_dst = false; /* We make sure next iteration, we won't count the node as a new node. */
 			    //nl.roots.insert(el.roots.begin(), el.roots.end()); //populate roots for non-new nodes
-				updateRoots(nl.roots, el.roots);
+				updateRoots(nl.roots, el.roots); //TODO: optimize to collect all roots in set and update once
 				in_edge->set_data(el);
 				}
 			vertex.set_data(nl);
@@ -392,6 +394,7 @@ namespace graphchi {
 			//TODO: do we need to change someting here?
 			graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 			EdgeDataType el = in_edge->get_data();
+			updateRoots(nl.roots, el.roots);
 			if (el.itr == 0) {
 			    el.itr++;
 			    in_edge->set_data(el);
@@ -579,32 +582,75 @@ namespace graphchi {
 		std::vector<RootPair> zeroPairs;   // Store zero pairs
 		std::unordered_set<uint32_t> seenRoots; // Track unique root values
 	
-		// Step 1: Extract unique root-order pairs
 		for (size_t i = 0; i < ROOTS * 2-1; i += 2) {
 			RootPair pair = {fromArray[i], fromArray[i + 1]};
 	
 			if (pair.root == 0) {
-				zeroPairs.push_back(pair);  // Store zero values separately
+				zeroPairs.push_back(pair);  // Store zero values separately, no need to store really. optimize for memory usage
 			} else if (seenRoots.find(pair.root) == seenRoots.end()) {
 				seenRoots.insert(pair.root);  // Mark root as seen
 				validPairs.push_back(pair);   // Store unique valid values
 			}
+			else {
+				// If root is already seen, check if the new order is greater
+				auto it = std::find_if(validPairs.begin(), validPairs.end(),
+									   [&pair](const RootPair& existingPair) {
+										   return existingPair.root == pair.root;
+									   });
+				
+				// If we find an existing pair for this root
+				if (it != validPairs.end()) {
+					// Only update if the new order is higher
+					if (it->order < pair.order) {
+						it->order = pair.order;  // Update with higher order
+					}
+				}
+			}
+		}
+
+		for (size_t i = 0; i < ROOTS * 2-1; i += 2) {
+			RootPair pair = {updateArray[i], updateArray[i + 1]};
+	
+			if (pair.root == 0) {
+				zeroPairs.push_back(pair);  // Store zero values separately, no need to store really. optimize for memory usage
+			} else if (seenRoots.find(pair.root) == seenRoots.end()) {
+				seenRoots.insert(pair.root);  // Mark root as seen
+				validPairs.push_back(pair);   // Store unique valid values
+			}
+			else {
+				// If root is already seen, check if the new order is greater
+				auto it = std::find_if(validPairs.begin(), validPairs.end(),
+									   [&pair](const RootPair& existingPair) {
+										   return existingPair.root == pair.root;
+									   });
+				
+				// If we find an existing pair for this root
+				if (it != validPairs.end()) {
+					// Only update if the new order is higher
+					if (it->order < pair.order) {
+						it->order = pair.order;  // Update with higher order
+					}
+				}
+			}
 		}
 	
-		// Step 2: Sort valid pairs by order number (ascending)
 		std::sort(validPairs.begin(), validPairs.end(), [](const RootPair& a, const RootPair& b) {
 			return a.order < b.order;
 		});
 	
-		// Step 3: Merge sorted valid pairs and zero pairs into updateArray
 		size_t index = 0;
-		for (const auto& pair : validPairs) {  // Add sorted non-zero pairs
-			updateArray[index++] = pair.root;
-			updateArray[index++] = pair.order;
+		size_t startIndex = std::max(validPairs.size(), static_cast<size_t>(ROOTS)) - ROOTS;  
+
+		// Add the last ROOTS number of valid pairs (from the end of the list)
+		for (size_t i = startIndex; i < validPairs.size(); ++i) {
+			updateArray[index++] = validPairs[i].root;
+			updateArray[index++] = validPairs[i].order;
 		}
-		for (const auto& pair : zeroPairs) {  // Add zero pairs at the end
-			updateArray[index++] = pair.root;
-			updateArray[index++] = pair.order;
+	
+		// Step 4: Fill the remaining space with zero pairs if there is room, this could be done without the objects by just adding zeros to the array.
+		for (size_t i = validPairs.size(); i < ROOTS; ++i) {
+			updateArray[index++] = 0;   // Add zero for root
+			updateArray[index++] = 0;   // Add zero for order
 		}
 	}
 
@@ -632,10 +678,13 @@ namespace graphchi {
 		return result;
 	}
 
-	void updateRootOrder() {
-		std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex
-		rootOrder++;  // Safely update rootOrder
+	void updateRootOrderAndAddToRoots(uint32_t roots[]) {
+		std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
+	
+		rootOrder++;  // Safely increment rootOrder
 		logstream(LOG_INFO) << "Updated rootOrder: " << rootOrder << std::endl;
+	
+		roots[1] = rootOrder;  // Safely assign rootOrder to the array
 	}
-    };
+};
 }
