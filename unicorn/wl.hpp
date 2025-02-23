@@ -79,13 +79,13 @@ namespace graphchi {
                     nl.is_leaf = true;
 					nl.roots[0] = vertex.id(); //add itself as root
 					//nl.roots[1] = rootOrder; //add its order
-					updateRootOrderAndAddToRoots(nl.roots);
+					updateRootOrderAndAddToRoots(nl.roots); //TODO: this seem to be the wrong place to do this. Maybe do it in the second iteration?
 		}
 		nl.tm[0] = 0; /* The first timestamp associated with a vertex is always zero. */
 		vertex.set_data(nl);
 
 		/* Populate the histogram. */
-		std::string rootString = rootToString(vertex.get_data().roots);
+		std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 		unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 		hist->update(nl.lb[0], true, rootHash);
 
@@ -136,7 +136,7 @@ namespace graphchi {
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
 #endif
 		    /* Populate the histogram. */
-			std::string rootString = rootToString(vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 		    hist->update(last_itr_label, true, rootHash);
 		    /* Update the vertex's label vector. */
@@ -185,13 +185,13 @@ namespace graphchi {
 		    unsigned long new_label = hash((unsigned char *)new_label_str.c_str());
 		    /* Populate the histogram, depending if we CHUNKIFY or not. */
 		    if (!CHUNKIFY) {
-			std::string rootString = rootToString(vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			hist->update(new_label, true, rootHash);
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			for (std::vector<unsigned long>::iterator ti = to_insert.begin(); ti != to_insert.end(); ++ti){
-				std::string rootString = rootToString(vertex.get_data().roots);
+				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			    hist->update(*ti, true, rootHash);
 				}
@@ -276,7 +276,7 @@ namespace graphchi {
 			/* Populate the histogram for all its labels (hops). */
 			for (int i = 0; i < K_HOPS + 1; i++) {
 			    hist->decay(SFP);
-				std::string rootString = rootToString(vertex.get_data().roots);
+				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			    hist->update(nl.lb[i], false, rootHash);
 			}
@@ -334,7 +334,7 @@ namespace graphchi {
 #endif
 			/* Populate histogram map. */
 			hist->decay(SFP);
-			std::string rootString = rootToString(vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			hist->update(nl.lb[0], false, rootHash);
 		    }
@@ -457,7 +457,7 @@ namespace graphchi {
 			//TODO
 		    if (!CHUNKIFY) {
 			hist->decay(SFP);
-			std::string rootString = rootToString(vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			hist->update(new_label, false, rootHash);
 		    } else {
@@ -468,7 +468,7 @@ namespace graphchi {
 				hist->decay(SFP);  /* Only decay once. */
 				first = false;
 			    }
-				std::string rootString = rootToString(vertex.get_data().roots);
+				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			    hist->update(*ti, false, rootHash);
 			}
@@ -654,7 +654,7 @@ namespace graphchi {
 		}
 	}
 
-	std::string rootToString(uint32_t roots[], const char* delimiter = ",") { //TODO: remove delimiter for live version
+	std::string rootToString( uint32_t currentRoot, uint32_t roots[], const char* delimiter = ",") { //TODO: remove delimiter for live version
 		std::string result;
 		bool firstElement = true;
 		static int runCount = 0;  // Persistent counter across function calls
@@ -672,7 +672,7 @@ namespace graphchi {
 			result += std::to_string(roots[i]) + ":" + std::to_string(roots[i+1]);  // Convert number to string
 		}
 		if (runCount > 1000) {
-			logstream(LOG_INFO) << "Iterating over roots array (run " << runCount << "): " << result << std::endl;
+			logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
 			runCount = 0;
 		}
 		return result;
