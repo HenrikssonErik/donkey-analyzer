@@ -31,11 +31,12 @@
 #include <cstdint>
 #include <unordered_set>
 #include <algorithm>
+#include <unordered_map>
 
 
 std::mutex rootOrderMutex;
 		int rootOrder = 1;
-
+	
 namespace graphchi {
     /* GraphChi programs need to subclass GraphChiProgram<vertex-type, edge-type> 
      * class. The main logic is usually in the update function. */
@@ -680,7 +681,6 @@ namespace graphchi {
 
 	void updateRootOrderAndAddToRoots(uint32_t roots[], uint32_t rootToAdd) {
 		static std::unordered_map<uint32_t, uint32_t> seenRoots;  // Map to store roots and their corresponding rootOrder
-	
 		std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
 	
 		// Check if the root already exists in the set, if so use the existing rootOrder
