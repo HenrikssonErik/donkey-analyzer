@@ -38,7 +38,7 @@ namespace graphchi {
     struct WeisfeilerLehman : public GraphChiProgram<VertexDataType, EdgeDataType> {
         /* Get the histogram singleton. */
         Histogram* hist = Histogram::get_instance();
-
+		std::mutex rootOrderMutex;
 		int rootOrder = 1;
 
         /* Vertex update function. */
@@ -77,7 +77,7 @@ namespace graphchi {
                     nl.is_leaf = true;
 					nl.roots[0] = vertex.id(); //add itself as root
 					nl.roots[1] = rootOrder; //add its order
-					rootOrder++; // increment order
+					updateRootOrder();
 		}
 		nl.tm[0] = 0; /* The first timestamp associated with a vertex is always zero. */
 		vertex.set_data(nl);
@@ -257,10 +257,10 @@ namespace graphchi {
 			VertexDataType nl;
 			nl.lb[0] = el.src[0];
 			nl.tm[0] = 0;
-			//nl.roots.insert(vertex.id());
-			nl.roots[0] = vertex.id(); //add itself as root
-			nl.roots[1] = rootOrder; //add its order
-			rootOrder++; // increment order
+			//nl.roots.insert(vertex.id()); //we use update function to set roots further down.
+			//nl.roots[0] = vertex.id(); //add itself as root
+			//nl.roots[1] = rootOrder; //add its order
+			//rootOrder++; // increment order
 			/* Since the node has no incoming edges, all of its labels 
 			 * are the same as the initial label. All of its timestamps
 			 * are set to 0. */
@@ -568,7 +568,7 @@ namespace graphchi {
 		roots[ROOTS - 2] = 0;
 		roots[ROOTS - 1] = 0;  // Leave a gap at the end
 	}
-	
+
 	void updateRoots(uint32_t updateArray[], uint32_t fromArray[]) {
 		struct RootPair {
 			uint32_t root;
@@ -580,7 +580,7 @@ namespace graphchi {
 		std::unordered_set<uint32_t> seenRoots; // Track unique root values
 	
 		// Step 1: Extract unique root-order pairs
-		for (size_t i = 0; i < ROOTS * 2; i += 2) {
+		for (size_t i = 0; i < ROOTS * 2-1; i += 2) {
 			RootPair pair = {fromArray[i], fromArray[i + 1]};
 	
 			if (pair.root == 0) {
@@ -610,7 +610,9 @@ namespace graphchi {
 
 	std::string rootToString(uint32_t roots[], const char* delimiter = ",") { //TODO: remove delimiter for live version
 		std::string result;
-		bool firstElement = true; 
+		bool firstElement = true;
+		static int runCount = 0;  // Persistent counter across function calls
+    	runCount++; 
 
 		for (size_t i = 0; i < ROOTS*2-1; i+=2) {
 			if (roots[i] == 0) continue;  // Skip zero values
@@ -623,8 +625,17 @@ namespace graphchi {
 
 			result += std::to_string(roots[i]) + ":" + std::to_string(roots[i+1]);  // Convert number to string
 		}
-		logstream(LOG_INFO) << "Iterating over roots array: " << result << std::endl;
+		if (runCount > 1000) {
+			logstream(LOG_INFO) << "Iterating over roots array (run " << runCount << "): " << result << std::endl;
+			runCount = 0;
+		}
 		return result;
+	}
+
+	void updateRootOrder() {
+		std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex
+		rootOrder++;  // Safely update rootOrder
+		logstream(LOG_INFO) << "Updated rootOrder: " << rootOrder << std::endl;
 	}
     };
 }
