@@ -657,7 +657,7 @@ namespace graphchi {
 		}
 	}
 
-	std::string rootToString( uint32_t currentRoot, uint32_t roots[], const char* delimiter = ",") { //TODO: remove delimiter for live version
+	std::string rootToString( uint32_t currentRoot, uint32_t roots[], const char* delimiter = "") { //TODO: remove delimiter for live version
 		std::string result;
 		bool firstElement = true;
 		static int runCount = 0;  // Persistent counter across function calls
@@ -672,7 +672,23 @@ namespace graphchi {
 				firstElement = false;  // Mark that the first element has been added
 			}
 
-			result += std::to_string(roots[i]) + ":" + std::to_string(roots[i+1]);  // Convert number to string
+			//result += std::to_string(roots[i]) + ":" + std::to_string(roots[i+1]); //For nice printing
+			result += std::to_string(roots[i]) + " ";  // Convert number to string
+		}
+		/*if (runCount > 1000) {
+			logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
+			runCount = 0;
+		} */
+		return result;
+	}
+
+	unsigned long rootEmbedding( uint32_t currentRoot, uint32_t roots[]) { //TODO: remove delimiter for live version
+		unsigned long result;
+
+		for (size_t i = 0; i < ROOTS*2-1; i+=2) {
+			if (roots[i] == 0) continue;  // Skip zero values
+
+			  result ^= roots[i]; //xor all root ids, this means that their order in the list doesnt matter
 		}
 		/*if (runCount > 1000) {
 			logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
