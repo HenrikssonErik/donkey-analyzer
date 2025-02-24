@@ -86,8 +86,9 @@ namespace graphchi {
 		vertex.set_data(nl);
 
 		/* Populate the histogram. */
-		std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
-		unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+		//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+		//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+		unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 		hist->update(nl.lb[0], true, rootHash);
 
 		/* Schedule itself for the next iteration. */
@@ -139,8 +140,9 @@ namespace graphchi {
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
 #endif
 		    /* Populate the histogram. */
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
-			unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+			unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 		    hist->update(last_itr_label, true, rootHash);
 		    /* Update the vertex's label vector. */
 		    nl.lb[gcontext.iteration] = last_itr_label;
@@ -188,14 +190,16 @@ namespace graphchi {
 		    unsigned long new_label = hash((unsigned char *)new_label_str.c_str());
 		    /* Populate the histogram, depending if we CHUNKIFY or not. */
 		    if (!CHUNKIFY) {
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
-			unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+			unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			hist->update(new_label, true, rootHash);
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			for (std::vector<unsigned long>::iterator ti = to_insert.begin(); ti != to_insert.end(); ++ti){
-				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
-				unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+				unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			    hist->update(*ti, true, rootHash);
 				}
 		    }
@@ -279,8 +283,9 @@ namespace graphchi {
 			/* Populate the histogram for all its labels (hops). */
 			for (int i = 0; i < K_HOPS + 1; i++) {
 			    hist->decay(SFP);
-				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
-				unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+				unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			    hist->update(nl.lb[i], false, rootHash);
 			}
 			/* Populate the labels to all of its out-going edges. */
@@ -337,8 +342,9 @@ namespace graphchi {
 #endif
 			/* Populate histogram map. */
 			hist->decay(SFP);
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
-			unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+			unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			hist->update(nl.lb[0], false, rootHash);
 		    }
 		}
@@ -460,8 +466,9 @@ namespace graphchi {
 			//TODO
 		    if (!CHUNKIFY) {
 			hist->decay(SFP);
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
-			unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+			unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			hist->update(new_label, false, rootHash);
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
@@ -471,8 +478,9 @@ namespace graphchi {
 				hist->decay(SFP);  /* Only decay once. */
 				first = false;
 			    }
-				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
-				unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
+				unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			    hist->update(*ti, false, rootHash);
 			}
 		    }
@@ -682,7 +690,7 @@ namespace graphchi {
 		return result;
 	}
 
-	unsigned long rootEmbedding( uint32_t currentRoot, uint32_t roots[]) { //TODO: remove delimiter for live version
+	unsigned long rootEmbedding( uint32_t roots[]) { //TODO: remove delimiter for live version
 		unsigned long result;
 
 		for (size_t i = 0; i < ROOTS*2-1; i+=2) {
