@@ -35,7 +35,7 @@
 
 
 std::mutex rootOrderMutex;
-uint32_t rootOrder = 1;
+unsigned long rootOrder = 1;
 
 	
 namespace graphchi {
@@ -137,9 +137,8 @@ namespace graphchi {
 		     * does not have any in-coming edges, i.e., a vertex with
 		     * is_leaf == true.  Simply use the last label of the vertex
 		     * itself since it has no incoming neighbors. */
-			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+			updateRootOrderAndAddToRoots(nl.roots, vertex.random_outedge().src[0]);
 		    unsigned long last_itr_label = nl.lb[gcontext.iteration - 1];
-			//updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: testing to add it here instead
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
 #endif
@@ -274,7 +273,11 @@ namespace graphchi {
 			VertexDataType nl;
 			nl.lb[0] = el.src[0];
 			nl.tm[0] = 0;
-			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+			if(nl.roots[0].root == 0){
+				updateRootOrderAndAddToRoots(nl.roots, nl.lb[0]);
+			}else{
+				logstream(LOG_DEBUG) << "LeafNode already has root: " << vertex.id() << "ROOT in list:" << nl.roots[0].root << ":" << nl.roots[0].rootOrder std::endl;
+			}
 			/* Since the node has no incoming edges, all of its labels 
 			 * are the same as the initial label. All of its timestamps
 			 * are set to 0. */
@@ -596,7 +599,7 @@ namespace graphchi {
 	
 		std::vector<RootPair> validPairs;  // Store non-zero unique pairs
 		//std::vector<RootPair> zeroPairs;   // Store zero pairs
-		std::unordered_set<uint32_t> seenRoots; // Track unique root values
+		std::unordered_set<unsigned long> seenRoots; // Track unique root values
 		//rootToString(UINT32_MAX, fromArray);
 		//rootToString(UINT32_MAX, updateArray);
 
@@ -706,10 +709,11 @@ namespace graphchi {
 		return result;
 	}
 
-	void updateRootOrderAndAddToRoots(RootPair roots[], uint32_t rootToAdd) {
-		static std::unordered_map<uint32_t, uint32_t> seenRoots;  // Map to store roots and their corresponding rootOrder
+	void updateRootOrderAndAddToRoots(RootPair roots[], unsigned long rootToAdd) {
+		static std::unordered_map<unsigned long, unsigned long> seenRoots;  // Map to store roots and their corresponding rootOrder
 		//std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
-		uint32_t rootOrderToAssign = 0;
+		logstream(LOG_INFO) << "Root is zero! For vertex: " << rootToAdd << std::endl;
+		unsigned long rootOrderToAssign = 0;
 		if (rootToAdd == 0) {
 			rootToAdd = 1; //if we encounter a correct id that is 0, we msut use a 
 		}
