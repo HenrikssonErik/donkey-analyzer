@@ -712,9 +712,9 @@ namespace graphchi {
 	void updateRootOrderAndAddToRoots(RootPair roots[], unsigned long rootToAdd) {
 		static std::unordered_map<unsigned long, unsigned long> seenRoots;  // Map to store roots and their corresponding rootOrder
 		//std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
-		logstream(LOG_INFO) << "Root is zero! For vertex: " << rootToAdd << std::endl;
 		unsigned long rootOrderToAssign = 0;
 		if (rootToAdd == 0) {
+			logstream(LOG_INFO) << "Root is zero! For vertex: " << rootToAdd << std::endl;
 			rootToAdd = 1; //if we encounter a correct id that is 0, we msut use a 
 		}
 		// Check if the root already exists in the set, if so use the existing rootOrder
