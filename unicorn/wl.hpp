@@ -596,7 +596,10 @@ namespace graphchi {
 		std::vector<RootPair> validPairs;  // Store non-zero unique pairs
 		//std::vector<RootPair> zeroPairs;   // Store zero pairs
 		std::unordered_set<uint32_t> seenRoots; // Track unique root values
-	
+		logstream(LOG_INFO) << "Updating root list..." << std::endl;
+		rootToString(0000, fromArray);
+		rootToString(0000, updateArray);
+
 		for (size_t i = 0; i < ROOTS; i++) {
 			RootPair pair = fromArray[i];
 	
@@ -682,7 +685,7 @@ namespace graphchi {
 				firstElement = false;  // Mark that the first element has been added
 			}
 
-			result += std::to_string(roots[i].root) + ":" + std::to_string(roots[i+1].order); //For nice printing
+			result += std::to_string(roots[i].root) + ":" + std::to_string(roots[i].order); //For nice printing
 			//result += std::to_string(roots[i]) + " ";  // Convert number to string
 		}
 		if (runCount > 1000) {
