@@ -722,8 +722,8 @@ namespace graphchi {
 		roots[0] = newRoot;
 	}
 
-	void updateRootsForHist(std::vector<RootPair>& roots, bool base) {
-		for (size_t i = 0; i < roots.size(); ++i) {
+	void updateRootsForHist(RootPair roots[], bool base) {
+		for (size_t i = 0; i < ROOTS; ++i) {
 			// Assuming nl.lb[0] is used in the update call, and rootHash is defined
 			unsigned long rootHash = roots[i].root;  // will convert the value to a unsinged long
 			hist->update(rootHash, base); //add the root counts to the histogram
