@@ -137,7 +137,7 @@ namespace graphchi {
 		     * does not have any in-coming edges, i.e., a vertex with
 		     * is_leaf == true.  Simply use the last label of the vertex
 		     * itself since it has no incoming neighbors. */
-			updateRootOrderAndAddToRoots(nl.roots, vertex.random_outedge().src[0]);
+			updateRootOrderAndAddToRoots(nl.roots, vertex.random_outedge()->get_data().src[0]);
 		    unsigned long last_itr_label = nl.lb[gcontext.iteration - 1];
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
@@ -276,7 +276,7 @@ namespace graphchi {
 			if(nl.roots[0].root == 0){
 				updateRootOrderAndAddToRoots(nl.roots, nl.lb[0]);
 			}else{
-				logstream(LOG_DEBUG) << "LeafNode already has root: " << vertex.id() << "ROOT in list:" << nl.roots[0].root << ":" << nl.roots[0].rootOrder std::endl;
+				logstream(LOG_DEBUG) << "LeafNode already has root: " << vertex.id() << "ROOT in list:" << nl.roots[0].root << ":" << nl.roots[0].order << std::endl;
 			}
 			/* Since the node has no incoming edges, all of its labels 
 			 * are the same as the initial label. All of its timestamps
