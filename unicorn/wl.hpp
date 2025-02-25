@@ -35,7 +35,8 @@
 
 
 std::mutex rootOrderMutex;
-		uint32_t rootOrder = 1;
+uint32_t rootOrder = 1;
+
 	
 namespace graphchi {
     /* GraphChi programs need to subclass GraphChiProgram<vertex-type, edge-type> 
@@ -86,10 +87,11 @@ namespace graphchi {
 		vertex.set_data(nl);
 
 		/* Populate the histogram. */
-		//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+		std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 		//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
-		unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
-		hist->update(nl.lb[0], true, rootHash);
+		//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
+		hist->update(nl.lb[0], true);
+		updateRootsForHist(nl.roots, true);
 
 		/* Schedule itself for the next iteration. */
 		if (gcontext.scheduler != NULL) {
@@ -117,17 +119,18 @@ namespace graphchi {
 		 * the concatenated string. That is, we may add multiple entries to the map 
 		 * for one string. */
                 std::vector<EdgeDataType> neighborhood; /* We reuse edge_label struct vector to store the neighborhood values. */
-		for (int i = 0; i < vertex.num_inedges(); i++) {
+				VertexDataType nl = vertex.get_data();
+				for (int i = 0; i < vertex.num_inedges(); i++) {
                     graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 		    EdgeDataType el = in_edge->get_data();
 		    assert(el.itr == gcontext.iteration);	/* During base graph iteration, edge itr value should be the same as gcontext iteration value before the update. */
 		    neighborhood.push_back(el); // add edges to be processed again
 		    /* We will use those edges so increment the itr count by 1 and update the edge. */
 		    el.itr++;
-			updateRoots(vertex.get_data().roots, el.roots);
+			updateRoots(nl.roots, el.roots);
 		    in_edge->set_data(el);
+			vertex.set_data(nl);
 		}
-		VertexDataType nl = vertex.get_data();
 
 		if (neighborhood.size() == 0) {
                     /* The vertex could also be a node in the base graph that
@@ -140,10 +143,11 @@ namespace graphchi {
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
 #endif
 		    /* Populate the histogram. */
-			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
-			unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
-		    hist->update(last_itr_label, true, rootHash);
+			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
+		    hist->update(last_itr_label, true);
+			updateRootsForHist(nl.roots, true);
 		    /* Update the vertex's label vector. */
 		    nl.lb[gcontext.iteration] = last_itr_label;
 		    nl.tm[gcontext.iteration] = 0; /* All timestamps of the leaf vertex is set to be 0. */
@@ -154,7 +158,8 @@ namespace graphchi {
 			EdgeDataType el = out_edge->get_data();
 			el.src[gcontext.iteration] = last_itr_label;
 			/* Time stamp does not change for nodes with no in-coming neighbors. */
-			el.tme[gcontext.iteration] = el.tme[gcontext.iteration - 1]; 
+			el.tme[gcontext.iteration] = el.tme[gcontext.iteration - 1];
+			updateRoots(el.roots, nl.roots);
 			out_edge->set_data(el);
 		    }
 		} else {
@@ -190,18 +195,20 @@ namespace graphchi {
 		    unsigned long new_label = hash((unsigned char *)new_label_str.c_str());
 		    /* Populate the histogram, depending if we CHUNKIFY or not. */
 		    if (!CHUNKIFY) {
-			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
-			unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
-			hist->update(new_label, true, rootHash);
+			//unsigned long rootHash = rootEmbedding(nl.roots);
+			hist->update(new_label, true);
+			updateRootsForHist(nl.roots, true);
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			for (std::vector<unsigned long>::iterator ti = to_insert.begin(); ti != to_insert.end(); ++ti){
-				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
-				unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
-			    hist->update(*ti, true, rootHash);
+				//unsigned long rootHash = rootEmbedding(nl.roots);
+			    hist->update(*ti, true);
 				}
+			updateRootsForHist(nl.roots, true);
 		    }
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "New label of vertex (" << vertex.id() << "): " << new_label << std::endl;
@@ -266,10 +273,7 @@ namespace graphchi {
 			VertexDataType nl;
 			nl.lb[0] = el.src[0];
 			nl.tm[0] = 0;
-			//nl.roots.insert(vertex.id()); //we use update function to set roots further down.
-			//nl.roots[0] = vertex.id(); //add itself as root
-			//nl.roots[1] = rootOrder; //add its order
-			//rootOrder++; // increment order
+			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 			/* Since the node has no incoming edges, all of its labels 
 			 * are the same as the initial label. All of its timestamps
 			 * are set to 0. */
@@ -283,10 +287,11 @@ namespace graphchi {
 			/* Populate the histogram for all its labels (hops). */
 			for (int i = 0; i < K_HOPS + 1; i++) {
 			    hist->decay(SFP);
-				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
-				unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
-			    hist->update(nl.lb[i], false, rootHash);
+				//unsigned long rootHash = rootEmbedding( nl.roots);
+			    hist->update(nl.lb[i], false);
+				updateRootsForHist(nl.roots, false);
 			}
 			/* Populate the labels to all of its out-going edges. */
 			for (int i = 0; i < vertex.num_outedges(); i++) {
@@ -342,10 +347,11 @@ namespace graphchi {
 #endif
 			/* Populate histogram map. */
 			hist->decay(SFP);
-			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
-			unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
-			hist->update(nl.lb[0], false, rootHash);
+			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
+			hist->update(nl.lb[0], false);
+			updateRootsForHist(nl.roots, false);
 		    }
 		}
 		/* The node is known to the system. */
@@ -466,10 +472,11 @@ namespace graphchi {
 			//TODO
 		    if (!CHUNKIFY) {
 			hist->decay(SFP);
-			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
-			unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
-			hist->update(new_label, false, rootHash);
+			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
+			hist->update(new_label, false);
+			updateRootsForHist(nl.roots, false);
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			bool first = true;
@@ -478,11 +485,12 @@ namespace graphchi {
 				hist->decay(SFP);  /* Only decay once. */
 				first = false;
 			    }
-				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
-				unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
-			    hist->update(*ti, false, rootHash);
+				//unsigned long rootHash = rootEmbedding(vertex.get_data().roots);
+			    hist->update(*ti, false);
 			}
+			updateRootsForHist(nl.roots, false);
 		    }
 		    /* Update the vertex's label*/
 		    nl.lb[min_itr] = new_label;
@@ -583,26 +591,22 @@ namespace graphchi {
 		roots[ROOTS - 1] = 0;  // Leave a gap at the end
 	}
 
-	void updateRoots(uint32_t updateArray[], uint32_t fromArray[]) {
-		struct RootPair {
-			uint32_t root;
-			uint32_t order;
-		};
+	void updateRoots(RootPair updateArray[], RootPair fromArray[]) {
 	
 		std::vector<RootPair> validPairs;  // Store non-zero unique pairs
-		std::vector<RootPair> zeroPairs;   // Store zero pairs
+		//std::vector<RootPair> zeroPairs;   // Store zero pairs
 		std::unordered_set<uint32_t> seenRoots; // Track unique root values
 	
-		for (size_t i = 0; i < ROOTS * 2-1; i += 2) {
-			RootPair pair = {fromArray[i], fromArray[i + 1]};
+		for (size_t i = 0; i < ROOTS; i++) {
+			RootPair pair = fromArray[i];
 	
 			if (pair.root == 0) {
-				zeroPairs.push_back(pair);  // Store zero values separately, no need to store really. optimize for memory usage
-			} else if (seenRoots.find(pair.root) == seenRoots.end()) {
+				continue; 
+			} else if (seenRoots.find(pair.root) == seenRoots.end()) { //to avoid duplicate roots
 				seenRoots.insert(pair.root);  // Mark root as seen
 				validPairs.push_back(pair);   // Store unique valid values
 			}
-			else {
+			/*else {
 				// If root is already seen, check if the new order is greater
 				auto it = std::find_if(validPairs.begin(), validPairs.end(),
 									   [&pair](const RootPair& existingPair) {
@@ -616,19 +620,19 @@ namespace graphchi {
 						it->order = pair.order;  // Update with higher order
 					}
 				}
-			}
+			} */
 		}
 
-		for (size_t i = 0; i < ROOTS * 2-1; i += 2) {
-			RootPair pair = {updateArray[i], updateArray[i + 1]};
+		for (size_t i = 0; i < ROOTS; i++) {
+			RootPair pair = {updateArray[i]};
 	
 			if (pair.root == 0) {
-				zeroPairs.push_back(pair);  // Store zero values separately, no need to store really. optimize for memory usage
-			} else if (seenRoots.find(pair.root) == seenRoots.end()) {
+				continue;
+			} else if (seenRoots.find(pair.root) == seenRoots.end()) { //to avoid duplicate roots
 				seenRoots.insert(pair.root);  // Mark root as seen
 				validPairs.push_back(pair);   // Store unique valid values
 			}
-			else {
+			/*else {
 				// If root is already seen, check if the new order is greater
 				auto it = std::find_if(validPairs.begin(), validPairs.end(),
 									   [&pair](const RootPair& existingPair) {
@@ -642,7 +646,7 @@ namespace graphchi {
 						it->order = pair.order;  // Update with higher order
 					}
 				}
-			}
+			}*/
 		}
 	
 		std::sort(validPairs.begin(), validPairs.end(), [](const RootPair& a, const RootPair& b) {
@@ -654,25 +658,23 @@ namespace graphchi {
 
 		// Add the last ROOTS number of valid pairs (from the end of the list)
 		for (size_t i = startIndex; i < validPairs.size(); ++i) {
-			updateArray[index++] = validPairs[i].root;
-			updateArray[index++] = validPairs[i].order;
+			updateArray[index++] = validPairs[i];
 		}
 	
 		// Step 4: Fill the remaining space with zero pairs if there is room, this could be done without the objects by just adding zeros to the array.
 		for (size_t i = validPairs.size(); i < ROOTS; ++i) {
-			updateArray[index++] = 0;   // Add zero for root
-			updateArray[index++] = 0;   // Add zero for order
+			updateArray[index++] = {0,0};   // Add zero for root and index
 		}
 	}
 
-	std::string rootToString( uint32_t currentRoot, uint32_t roots[], const char* delimiter = "") { //TODO: remove delimiter for live version
+	std::string rootToString( uint32_t currentRoot, RootPair roots[], const char* delimiter = ",") { //TODO: remove delimiter for live version
 		std::string result;
 		bool firstElement = true;
 		static int runCount = 0;  // Persistent counter across function calls
-    	//runCount++; 
+    	runCount++; 
 
-		for (size_t i = 0; i < ROOTS*2-1; i+=2) {
-			if (roots[i] == 0) continue;  // Skip zero values
+		for (size_t i = 0; i < ROOTS; i++) {
+			if (roots[i].root == 0) continue;  // Skip zero values
 
 			if (!firstElement) {
 				result += delimiter;  // Add delimiter **only after the first element**
@@ -680,46 +682,52 @@ namespace graphchi {
 				firstElement = false;  // Mark that the first element has been added
 			}
 
-			//result += std::to_string(roots[i]) + ":" + std::to_string(roots[i+1]); //For nice printing
-			result += std::to_string(roots[i]) + " ";  // Convert number to string
+			result += std::to_string(roots[i].root) + ":" + std::to_string(roots[i+1].order); //For nice printing
+			//result += std::to_string(roots[i]) + " ";  // Convert number to string
 		}
-		/*if (runCount > 1000) {
+		if (runCount > 1000) {
 			logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
 			runCount = 0;
-		} */
+		}
 		return result;
 	}
 
-	unsigned long rootEmbedding( uint32_t roots[]) { //TODO: remove delimiter for live version
+	unsigned long rootEmbedding( RootPair roots[]) { //combinesa ll root to one value via XOR
 		unsigned long result;
 
-		for (size_t i = 0; i < ROOTS*2-1; i+=2) {
-			if (roots[i] == 0) continue;  // Skip zero values
+		for (size_t i = 0; i < ROOTS; i++) {
+			if (roots[i].root == 0) continue;  // Skip zero values
 
-			  result ^= roots[i]; //xor all root ids, this means that their order in the list doesnt matter
+			  result ^= roots[i].root; //xor all root ids, this means that their order in the list doesnt matter
 		}
-		/*if (runCount > 1000) {
-			logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
-			runCount = 0;
-		} */
 		return result;
 	}
 
-	void updateRootOrderAndAddToRoots(uint32_t roots[], uint32_t rootToAdd) {
+	void updateRootOrderAndAddToRoots(RootPair roots[], uint32_t rootToAdd) {
 		static std::unordered_map<uint32_t, uint32_t> seenRoots;  // Map to store roots and their corresponding rootOrder
-		std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
-	
+		//std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
+		uint32_t rootOrderToAssign = 0;
 		// Check if the root already exists in the set, if so use the existing rootOrder
 		if (seenRoots.find(rootToAdd) != seenRoots.end()) {
-			rootOrder = seenRoots[rootToAdd];  // Use the existing rootOrder for this root
+			rootOrderToAssign = seenRoots[rootToAdd];  // Use the existing rootOrder for this root
 		} else {
-			rootOrder++;  // Safely increment rootOrder
+			rootOrderMutex.lock(); //lock rootOrder
+			rootOrderToAssign = rootOrder;
 			seenRoots[rootToAdd] = rootOrder;  // Store the new root and its rootOrder in the map
+			rootOrder++;  // Safely increment rootOrder
+			rootOrderMutex.unlock(); //unlock rootOrder
 			logstream(LOG_INFO) << "Updated rootOrder: " << rootOrder << std::endl;
 		}
-		
-		roots[0] = rootToAdd;
-		roots[1] = rootOrder;  // Safely assign rootOrder to the array
+		RootPair newRoot = {rootToAdd, rootOrderToAssign};
+		roots[0] = newRoot;
+	}
+
+	void updateRootsForHist(std::vector<RootPair>& roots, bool base) {
+		for (size_t i = 0; i < roots.size(); ++i) {
+			// Assuming nl.lb[0] is used in the update call, and rootHash is defined
+			unsigned long rootHash = roots[i].root;  // will convert the value to a unsinged long
+			hist->update(rootHash, base); //add the root counts to the histogram
+		}
 	}
 };
 }

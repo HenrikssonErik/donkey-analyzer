@@ -72,6 +72,11 @@ extern std::string HIST_FILE;
  * - "new_src": whether the source node is new, never-before-seen.
  * - "new_dst": whether the destination node is new. never-before-seen.
  */
+struct RootPair {
+	uint32_t root;
+	uint32_t order;
+};
+
 typedef struct edge_label {
     /* We use K_HOPS+1 because the first element is itself and
      * the next K_HOPS are exploration of K_HOPS neighbors. */
@@ -82,7 +87,7 @@ typedef struct edge_label {
     int itr;
     bool new_src;
     bool new_dst;
-    uint32_t roots[ROOTS*2]; //every second value is for when the root was created
+    RootPair roots[ROOTS] = {}; //every second value is for when the root was created
 } EdgeDataType;
 
 /* Node remembers all its most-updated labels "lb" and timestamps "tm".
@@ -91,7 +96,7 @@ typedef struct node_label {
     unsigned long lb[K_HOPS+1];
     unsigned long tm[K_HOPS+1];
     bool is_leaf;
-    uint32_t roots[ROOTS*2];
+    RootPair roots[ROOTS] ={};
 } VertexDataType;
 
 /* Each histogram element is associated with r, beta, c, which
