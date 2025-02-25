@@ -596,8 +596,8 @@ namespace graphchi {
 		std::vector<RootPair> validPairs;  // Store non-zero unique pairs
 		//std::vector<RootPair> zeroPairs;   // Store zero pairs
 		std::unordered_set<uint32_t> seenRoots; // Track unique root values
-		rootToString(0000, fromArray);
-		rootToString(0000, updateArray);
+		//rootToString(UINT32_MAX, fromArray);
+		//rootToString(UINT32_MAX, updateArray);
 
 		for (size_t i = 0; i < ROOTS; i++) {
 			RootPair pair = fromArray[i];
