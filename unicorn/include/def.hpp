@@ -73,8 +73,8 @@ extern std::string HIST_FILE;
  * - "new_dst": whether the destination node is new. never-before-seen.
  */
 struct RootPair {
-	unsigned long root;
-	unsigned long order;
+	uint32_t root;
+	uint32_t order;
 };
 
 typedef struct edge_label {

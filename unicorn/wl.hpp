@@ -35,7 +35,7 @@
 
 
 std::mutex rootOrderMutex;
-unsigned long rootOrder = 1;
+uint32_t rootOrder = 1;
 
 	
 namespace graphchi {
@@ -137,7 +137,7 @@ namespace graphchi {
 		     * does not have any in-coming edges, i.e., a vertex with
 		     * is_leaf == true.  Simply use the last label of the vertex
 		     * itself since it has no incoming neighbors. */
-			updateRootOrderAndAddToRoots(nl.roots, vertex.random_outedge()->get_data().src[0]);
+			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 		    unsigned long last_itr_label = nl.lb[gcontext.iteration - 1];
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
@@ -274,7 +274,7 @@ namespace graphchi {
 			nl.lb[0] = el.src[0];
 			nl.tm[0] = 0;
 			if(nl.roots[0].root == 0){
-				updateRootOrderAndAddToRoots(nl.roots, nl.lb[0]);
+				updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 			}else{
 				logstream(LOG_DEBUG) << "LeafNode already has root: " << vertex.id() << "ROOT in list:" << nl.roots[0].root << ":" << nl.roots[0].order << std::endl;
 			}
@@ -709,13 +709,16 @@ namespace graphchi {
 		return result;
 	}
 
-	void updateRootOrderAndAddToRoots(RootPair roots[], unsigned long rootToAdd) {
+	void updateRootOrderAndAddToRoots(RootPair roots[], uint32_t rootToAdd) {
 		static std::unordered_map<unsigned long, unsigned long> seenRoots;  // Map to store roots and their corresponding rootOrder
 		//std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
 		unsigned long rootOrderToAssign = 0;
 		if (rootToAdd == 0) {
 			logstream(LOG_INFO) << "Root is zero! For vertex: " << rootToAdd << std::endl;
 			rootToAdd = 1; //if we encounter a correct id that is 0, we msut use a 
+		}
+		if (rootToAdd == 8831 || rootToAdd == 8830 || rootToAdd == 9129) {
+			logstream(LOG_INFO) << "Malicious Root Found: " << rootToAdd << std::endl;
 		}
 		// Check if the root already exists in the set, if so use the existing rootOrder
 		if (seenRoots.find(rootToAdd) != seenRoots.end()) {
