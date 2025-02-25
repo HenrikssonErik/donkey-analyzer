@@ -81,13 +81,13 @@ namespace graphchi {
                     nl.is_leaf = true;
 					//nl.roots[0] = vertex.id(); //add itself as root
 					//nl.roots[1] = rootOrder; //add its order
-					//updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: might  be the wrong place to do this. Maybe do it in the second iteration?
+					updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: might  be the wrong place to do this. Maybe do it in the second iteration?
 		}
 		nl.tm[0] = 0; /* The first timestamp associated with a vertex is always zero. */
 		vertex.set_data(nl);
 
 		/* Populate the histogram. */
-		std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+		//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 		//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 		//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 		hist->update(nl.lb[0], true);
@@ -143,7 +143,7 @@ namespace graphchi {
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
 #endif
 		    /* Populate the histogram. */
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 		    hist->update(last_itr_label, true);
@@ -195,7 +195,7 @@ namespace graphchi {
 		    unsigned long new_label = hash((unsigned char *)new_label_str.c_str());
 		    /* Populate the histogram, depending if we CHUNKIFY or not. */
 		    if (!CHUNKIFY) {
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding(nl.roots);
 			hist->update(new_label, true);
@@ -203,7 +203,7 @@ namespace graphchi {
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			for (std::vector<unsigned long>::iterator ti = to_insert.begin(); ti != to_insert.end(); ++ti){
-				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 				//unsigned long rootHash = rootEmbedding(nl.roots);
 			    hist->update(*ti, true);
@@ -291,7 +291,7 @@ namespace graphchi {
 			/* Populate the histogram for all its labels (hops). */
 			for (int i = 0; i < K_HOPS + 1; i++) {
 			    hist->decay(SFP);
-				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 				//unsigned long rootHash = rootEmbedding( nl.roots);
 			    hist->update(nl.lb[i], false);
@@ -351,7 +351,7 @@ namespace graphchi {
 #endif
 			/* Populate histogram map. */
 			hist->decay(SFP);
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			hist->update(nl.lb[0], false);
@@ -370,6 +370,7 @@ namespace graphchi {
 		    assert(nl.is_leaf); /* Just a check to make sure the node is a leaf node. */
 		    /* Note: some repetitive work may have occurred in the following loop.
 		     * We have to do it because we don't know which edge has not been assigned. */
+			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 		    for (int i = 0; i < vertex.num_outedges(); i++) {
 			graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
 			EdgeDataType el = out_edge->get_data();
@@ -390,22 +391,7 @@ namespace graphchi {
 		    if (nl.is_leaf)
 			/* If this node used to be a leaf node. */
 			nl.is_leaf = false;
-		    /* In the case where a new edge occurs between two existing
-		     * nodes, the edge needs to be sync'ed with the node.
-		     * Some repetitive work may have occurred in the following
-		     * loop; we have to do it because we don't know which edge
-		     * has not been assigned yet. */
-		    for (int i = 0; i < vertex.num_outedges(); i++) {
-			graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
-			EdgeDataType el = out_edge->get_data();
-			for (int j = 1; j < K_HOPS + 1; j++) {
-			    el.src[j] = nl.lb[j];
-			    el.tme[j] = nl.tm[j];
-			}
-			//el.roots.insert(nl.roots.begin(), nl.roots.end());
-			updateRoots(el.roots, nl.roots);
-			out_edge->set_data(el);
-		    }
+		    
 		    /* Change all incoming edges whose itr count is 0 to 1.
 		     * At the same time, find the minimum itr among all inedges.*/
 		    int min_itr = K_HOPS + 2; /* no itr value in our K_HOPS-hop case can be larger than K_HOPS + 2. */
@@ -424,6 +410,23 @@ namespace graphchi {
 		    /* We check here since the minimum iteration value
 		     * should be at least 1, but less than K_HOPS + 2. */
 		    assert(min_itr > 0 && min_itr < K_HOPS + 2);
+
+			/* In the case where a new edge occurs between two existing
+		     * nodes, the edge needs to be sync'ed with the node.
+		     * Some repetitive work may have occurred in the following
+		     * loop; we have to do it because we don't know which edge
+		     * has not been assigned yet. */
+		    for (int i = 0; i < vertex.num_outedges(); i++) {
+				graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
+				EdgeDataType el = out_edge->get_data();
+				for (int j = 1; j < K_HOPS + 1; j++) {
+					el.src[j] = nl.lb[j];
+					el.tme[j] = nl.tm[j];
+				}
+				//el.roots.insert(nl.roots.begin(), nl.roots.end());
+				updateRoots(el.roots, nl.roots);
+				out_edge->set_data(el);
+				}
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "The min_itr of the vertex (" << vertex.id() << ") is: " << min_itr << std::endl;
 #endif
@@ -476,7 +479,7 @@ namespace graphchi {
 			//TODO
 		    if (!CHUNKIFY) {
 			hist->decay(SFP);
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			hist->update(new_label, false);
@@ -489,7 +492,7 @@ namespace graphchi {
 				hist->decay(SFP);  /* Only decay once. */
 				first = false;
 			    }
-				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 				//unsigned long rootHash = rootEmbedding(vertex.get_data().roots);
 			    hist->update(*ti, false);
