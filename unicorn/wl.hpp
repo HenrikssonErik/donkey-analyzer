@@ -596,7 +596,6 @@ namespace graphchi {
 		std::vector<RootPair> validPairs;  // Store non-zero unique pairs
 		//std::vector<RootPair> zeroPairs;   // Store zero pairs
 		std::unordered_set<uint32_t> seenRoots; // Track unique root values
-		logstream(LOG_INFO) << "Updating root list..." << std::endl;
 		rootToString(0000, fromArray);
 		rootToString(0000, updateArray);
 
@@ -710,6 +709,9 @@ namespace graphchi {
 		static std::unordered_map<uint32_t, uint32_t> seenRoots;  // Map to store roots and their corresponding rootOrder
 		//std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
 		uint32_t rootOrderToAssign = 0;
+		if (rootToAdd == 0) {
+			rootToAdd = 1; //if we encounter a correct id that is 0, we msut use a 
+		}
 		// Check if the root already exists in the set, if so use the existing rootOrder
 		if (seenRoots.find(rootToAdd) != seenRoots.end()) {
 			rootOrderToAssign = seenRoots[rootToAdd];  // Use the existing rootOrder for this root
@@ -719,7 +721,7 @@ namespace graphchi {
 			seenRoots[rootToAdd] = rootOrder;  // Store the new root and its rootOrder in the map
 			rootOrder++;  // Safely increment rootOrder
 			rootOrderMutex.unlock(); //unlock rootOrder
-			logstream(LOG_INFO) << "Updated rootOrder: " << rootOrder << std::endl;
+			logstream(LOG_INFO) << "Updated rootOrder: " << rootOrder << "For vertex: " << rootToAdd << std::endl;
 		}
 		RootPair newRoot = {rootToAdd, rootOrderToAssign};
 		roots[0] = newRoot;
