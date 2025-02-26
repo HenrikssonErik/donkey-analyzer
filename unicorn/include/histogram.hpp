@@ -34,7 +34,7 @@ public:
     ~Histogram();
     struct hist_elem construct_hist_elem(unsigned long label);
     void decay(FILE* fp);
-    void update(unsigned long label,  bool base);
+    void update(unsigned long label,  bool base, double counter);
     void create_sketch();
     void record_sketch(FILE* fp);
     unsigned long* get_sketch();

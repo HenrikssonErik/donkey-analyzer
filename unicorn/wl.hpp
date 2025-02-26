@@ -742,7 +742,7 @@ namespace graphchi {
 		for (size_t i = 0; i < ROOTS; ++i) {
 			// Assuming nl.lb[0] is used in the update call, and rootHash is defined
 			unsigned long rootHash = roots[i].root;  // will convert the value to a unsinged long
-			hist->update(rootHash, base); //add the root counts to the histogram
+			hist->update(rootHash, base, ROOTCOUNTER); //add the root counts to the histogram by incrementing the value with COUNTER amount
 		}
 	}
 };
