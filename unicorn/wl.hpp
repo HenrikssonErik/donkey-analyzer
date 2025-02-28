@@ -492,11 +492,12 @@ namespace graphchi {
 				hist->decay(SFP);  /* Only decay once. */
 				first = false;
 			    }
-				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 				//unsigned long rootHash = rootEmbedding(vertex.get_data().roots);
 			    hist->update(*ti, false);
 			}
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			updateRootsForHist(nl.roots, false);
 		    }
 		    /* Update the vertex's label*/
