@@ -75,7 +75,7 @@ unicorn/% : unicorn/%.cpp $(HEADERS)
 swdebug: CPPFLAGS += -DSKETCH_SIZE=2000 -DK_HOPS=3 -DMEMORY -DPREGEN=10000 -DUSEWINDOW -DBASESKETCH -DDEBUG -g
 swdebug: unicorn/main
 
-sb: CPPFLAGS += -DSKETCH_SIZE=2000 -DK_HOPS=3 -DMEMORY -DPREGEN=10000 -DROOTS=1 -DROOTCOUNTER=0.01 -g
+sb: CPPFLAGS += -DSKETCH_SIZE=2000 -DK_HOPS=3 -DMEMORY -DPREGEN=10000 -DROOTS=1 -DROOTCOUNTER=0.005 -g
 sb: unicorn/main
 
 ######################Unicorn Toy Example################################################
@@ -174,7 +174,7 @@ train_mimicry_RCA: sb
 
 evasion_mimicry_RCA: sb
 		cd ../../data && mkdir -p test_mimicry_evasion_RCA
-	number=0 ; while [ $$number -le 99 ] ; do \
+	number=0 ; while [ $$number -le 5 ] ; do \
 		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-evasion-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/test_mimicry_evasion_RCA/sketch-evasion-$$number.txt chunkify 1 chunk_size 50 ; \
 		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt.* ; \
 		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt_* ; \

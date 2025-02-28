@@ -143,7 +143,7 @@ namespace graphchi {
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
 #endif
 		    /* Populate the histogram. */
-			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 		    hist->update(last_itr_label, true);
@@ -195,7 +195,7 @@ namespace graphchi {
 		    unsigned long new_label = hash((unsigned char *)new_label_str.c_str());
 		    /* Populate the histogram, depending if we CHUNKIFY or not. */
 		    if (!CHUNKIFY) {
-			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding(nl.roots);
 			hist->update(new_label, true);
@@ -694,10 +694,8 @@ namespace graphchi {
 			result += std::to_string(roots[i].root) + ":" + std::to_string(roots[i].order); //For nice printing
 			//result += std::to_string(roots[i]) + " ";  // Convert number to string
 		}
-		if (runCount > 1000) {
-			logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
-			runCount = 0;
-		}
+		logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
+		runCount = 0;
 		return result;
 	}
 
@@ -720,9 +718,7 @@ namespace graphchi {
 			logstream(LOG_INFO) << "Root is zero! For vertex: " << rootToAdd << std::endl;
 			rootToAdd = 1; //if we encounter a correct id that is 0, we msut use a 
 		}
-		if (rootToAdd == 8831 || rootToAdd == 8830 || rootToAdd == 9129) {
-			logstream(LOG_INFO) << "Malicious Root Found: " << rootToAdd << std::endl;
-		}
+		
 		// Check if the root already exists in the set, if so use the existing rootOrder
 		if (seenRoots.find(rootToAdd) != seenRoots.end()) {
 			rootOrderToAssign = seenRoots[rootToAdd];  // Use the existing rootOrder for this root
