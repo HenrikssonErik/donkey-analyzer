@@ -684,7 +684,7 @@ namespace graphchi {
     	runCount++; 
 
 		for (size_t i = 0; i < ROOTS; i++) {
-			if (roots[i].root == 0) continue;  // Skip zero values
+			if (roots[i].root == 0 || roots[i].root == 0) continue;  // Skip zero values
 
 			if (!firstElement) {
 				result += delimiter;  // Add delimiter **only after the first element**
@@ -695,8 +695,10 @@ namespace graphchi {
 			result += std::to_string(roots[i].root) + ":" + std::to_string(roots[i].order); //For nice printing
 			//result += std::to_string(roots[i]) + " ";  // Convert number to string
 		}
+		if(!firstElement){
 		logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
 		runCount = 0;
+		}
 		return result;
 	}
 
