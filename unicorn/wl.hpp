@@ -60,7 +60,7 @@ namespace graphchi {
 		 * on the base graph (before new edges stream in). */
 		VertexDataType nl;
 
-		if(vertex.num_edges() == 0 || (vertex.num_edges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+		if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
 			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 		}
 
@@ -718,16 +718,13 @@ namespace graphchi {
 	}
 
 	void updateRootOrderAndAddToRoots(RootPair roots[], uint32_t rootToAdd) {
-		static std::unordered_map<unsigned long, unsigned long> seenRoots;  // Map to store roots and their corresponding rootOrder
+		static std::unordered_map<uint32_t, uint32_t> seenRoots;  // Map to store roots and their corresponding rootOrder
 		//std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
-		unsigned long rootOrderToAssign = 0;
+		uint32_t rootOrderToAssign = 0;
 		if (rootToAdd == 0) {
 			logstream(LOG_INFO) << "Root is zero, skipping it! For vertex: " << rootToAdd << std::endl;
 			rootToAdd = 1; //if we encounter a correct id that is 0, we msut use a
 			return;
-		}
-		if (rootToAdd == 8831 || rootToAdd == 8830 || rootToAdd == 9129) {
-			logstream(LOG_INFO) << "Malicious Root Found: " << rootToAdd << std::endl;
 		}
 		// Check if the root already exists in the set, if so use the existing rootOrder
 		if (seenRoots.find(rootToAdd) != seenRoots.end()) {
@@ -738,7 +735,7 @@ namespace graphchi {
 			seenRoots[rootToAdd] = rootOrder;  // Store the new root and its rootOrder in the map
 			rootOrder++;  // Safely increment rootOrder
 			rootOrderMutex.unlock(); //unlock rootOrder
-			logstream(LOG_INFO) << "Updated rootOrder: " << rootOrder << "For vertex: " << rootToAdd << std::endl;
+			logstream(LOG_INFO) << "Updated rootOrder: " << rootOrderToAssign << "For vertex: " << rootToAdd << std::endl;
 		}
 		RootPair newRoot = {rootToAdd, rootOrderToAssign};
 		roots[0] = newRoot;
