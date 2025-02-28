@@ -699,8 +699,8 @@ namespace graphchi {
 			result += std::to_string(roots[i].root) + ":" + std::to_string(roots[i].order); //For nice printing
 			//result += std::to_string(roots[i]) + " ";  // Convert number to string
 		}
-		if (runCount > 1000) {
-			logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
+		if (runCount > 100) {
+			logstream(LOG_INFO) << "Roots (currentRoot " << currentRoot << "): " << result << std::endl;
 			runCount = 0;
 		}
 		return result;
