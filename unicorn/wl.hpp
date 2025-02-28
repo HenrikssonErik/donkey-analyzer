@@ -60,6 +60,10 @@ namespace graphchi {
 		 * on the base graph (before new edges stream in). */
 		VertexDataType nl;
 
+		if(vertex.num_edges() == 0 || (vertex.num_edges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+		}
+
 		if (vertex.num_inedges() > 0) {
 		    graphchi_edge<EdgeDataType> * edge = vertex.inedge(0); /* Use the first inedge to get its original label. */
 		    nl.lb[0] = edge->get_data().dst;
@@ -684,7 +688,7 @@ namespace graphchi {
     	runCount++; 
 
 		for (size_t i = 0; i < ROOTS; i++) {
-			if (roots[i].root == 0 || roots[i].root == 0) continue;  // Skip zero values
+			if (roots[i].root == 0) continue;  // Skip zero values
 
 			if (!firstElement) {
 				result += delimiter;  // Add delimiter **only after the first element**
@@ -695,9 +699,9 @@ namespace graphchi {
 			result += std::to_string(roots[i].root) + ":" + std::to_string(roots[i].order); //For nice printing
 			//result += std::to_string(roots[i]) + " ";  // Convert number to string
 		}
-		if(!firstElement){
-		logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
-		runCount = 0;
+		if (runCount > 1000) {
+			logstream(LOG_INFO) << "Roots (run " << runCount << ", currentRoot " << currentRoot << "): " << result << std::endl;
+			runCount = 0;
 		}
 		return result;
 	}
@@ -718,10 +722,13 @@ namespace graphchi {
 		//std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
 		unsigned long rootOrderToAssign = 0;
 		if (rootToAdd == 0) {
-			logstream(LOG_INFO) << "Root is zero! For vertex: " << rootToAdd << std::endl;
-			rootToAdd = 1; //if we encounter a correct id that is 0, we msut use a 
+			logstream(LOG_INFO) << "Root is zero, skipping it! For vertex: " << rootToAdd << std::endl;
+			rootToAdd = 1; //if we encounter a correct id that is 0, we msut use a
+			return;
 		}
-		
+		if (rootToAdd == 8831 || rootToAdd == 8830 || rootToAdd == 9129) {
+			logstream(LOG_INFO) << "Malicious Root Found: " << rootToAdd << std::endl;
+		}
 		// Check if the root already exists in the set, if so use the existing rootOrder
 		if (seenRoots.find(rootToAdd) != seenRoots.end()) {
 			rootOrderToAssign = seenRoots[rootToAdd];  // Use the existing rootOrder for this root
