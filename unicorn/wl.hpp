@@ -124,6 +124,9 @@ namespace graphchi {
 		 * for one string. */
                 std::vector<EdgeDataType> neighborhood; /* We reuse edge_label struct vector to store the neighborhood values. */
 				VertexDataType nl = vertex.get_data();
+				if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+					updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+				}
 				for (int i = 0; i < vertex.num_inedges(); i++) {
                     graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 		    EdgeDataType el = in_edge->get_data();
@@ -327,7 +330,12 @@ namespace graphchi {
 			VertexDataType nl = vertex.get_data();
 			nl.lb[0] = edge->get_data().dst;
 			nl.tm[0] = 0;
-			//vertex.set_data(nl); //TODO: moved further down
+			//vertex.set_data(nl); 
+			//TODO: add "AddRoot()" here same as doneat the top
+
+			if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+				updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+			}
 			
 			for (int i = 0; i < vertex.num_inedges(); i++) {
 			    graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
