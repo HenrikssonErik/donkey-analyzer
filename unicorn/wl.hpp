@@ -65,7 +65,9 @@ namespace graphchi {
 					graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 					EdgeDataType el = in_edge->get_data();
 					//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
-					updateRoots(nl.roots, el.roots);
+					if(el.roots[0].root != 0){
+						updateRoots(nl.roots, el.roots);
+					}
 					vertex.set_data(nl);
 				}
 			}else{
