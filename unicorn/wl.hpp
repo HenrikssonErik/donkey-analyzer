@@ -105,12 +105,12 @@ namespace graphchi {
 #ifdef DEBUG
 		logstream(LOG_DEBUG) << "Original Label (" << vertex.id() << "): " << nl.lb[0] << std::endl;
 #endif
-			fixRoots(vertex);
+			fixRoots(vertex, gcontext);
             } else if (gcontext.iteration < K_HOPS + 1){
 				/* we know after K_HOPS iterations, we will be done with the base graph. */
                 /* After the first iteration, all nodes in the base graph are initialized. 
                  * All edges in the base graph should have "itr" >= 1. */
-				fixRoots(vertex);
+				fixRoots(vertex, gcontext);
 #ifdef DEBUG
 		/* This is simply a check to make sure that every vertex in the graph
 		 * at this point belongs to the base graph. */
@@ -251,7 +251,7 @@ namespace graphchi {
 	    } else {
 		/* We first check if the node is a new node or not so that we can do some initialization.
 		 * The node is new if any of its edges marks the node new. */
-		fixRoots(vertex);
+		fixRoots(vertex, gcontext);
 		bool is_new = false;
 		for (int i = 0; i < vertex.num_outedges(); i++) {
 		    graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
@@ -616,16 +616,17 @@ namespace graphchi {
 		roots[ROOTS - 1] = 0;  // Leave a gap at the end
 	}
 
-	void updateRoots(RootPair updateArray[], RootPair fromArray[]) {
-	
+	bool updateRoots(RootPair updateArray[], RootPair fromArray[]) {
+		
 		std::vector<RootPair> validPairs;  // Store non-zero unique pairs
 		//std::vector<RootPair> zeroPairs;   // Store zero pairs
 		std::unordered_set<unsigned long> seenRoots; // Track unique root values
-		//rootToString(UINT32_MAX, fromArray);
-		//rootToString(UINT32_MAX, updateArray);
+		RootPair oldArray[ROOTS];
+    	std::memcpy(oldArray, updateArray, sizeof(oldArray));
+
 		if (updateArray[0].root == 0 && fromArray[0].root == 0){
 			logstream(LOG_INFO) << "Updating Roots Are Empty " << std::endl;
-			return;
+			return false;
 		}
 
 		for (size_t i = 0; i < ROOTS; i++) {
@@ -696,6 +697,14 @@ namespace graphchi {
 		for (size_t i = validPairs.size(); i < ROOTS; ++i) {
 			updateArray[index++] = {0,0};   // Add zero for root and index
 		}
+
+		if (std::memcmp(oldArray, updateArray, sizeof(oldArray)) == 0) {
+			std::cout << "No changes detected.\n";
+			return false; // No changes
+		} else {
+			std::cout << "Array has changed.\n";
+			return true; // Changes detected
+		}
 	}
 
 	std::string rootToString( uint32_t currentRoot, RootPair roots[], const char* delimiter = ",") { //TODO: remove delimiter for live version
@@ -763,34 +772,39 @@ namespace graphchi {
 			} //add the root counts to the histogram by incrementing the value with COUNTER amount
 		}
 	}
-	void fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex){
+	void fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex, graphchi_context &gcontext){
+		bool updatedRoots = false;
 		VertexDataType nl = vertex.get_data();
 				if((vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)) && nl.roots[0].root == 0){
 					updateRootOrderAndAddToRoots(nl.roots, vertex.id());
-				}
-				if (vertex.num_inedges() > 0){
+					updatedRoots = true;
+				}else if (vertex.num_inedges() > 0){
 					for (int i = 0; i < vertex.num_inedges(); i++) {
 						graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
-						logstream(LOG_INFO) << "In edge source! (Vertex " << in_edge->vertex_id() << "): " << std::endl;
+						//logstream(LOG_INFO) << "In edge source! (Vertex " << in_edge->vertex_id() << "): " << std::endl;
 						EdgeDataType el = in_edge->get_data();
 						//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
 						if(el.roots[0].root != 0){
-							updateRoots(nl.roots, el.roots);
+							updatedRoots = updateRoots(nl.roots, el.roots);
 						}
 						vertex.set_data(nl);
 					}
 				}else{
 					logstream(LOG_INFO) << "Vertex has no incoming edges! (Vertex " << vertex.id() << "): " << std::endl;
 				}
-				if (vertex.num_outedges() > 0){
+
+				if (updatedRoots && vertex.num_outedges() > 0){
 					if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
 						for (int i = 0; i < vertex.num_outedges(); i++) {
 							graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
-							logstream(LOG_INFO) << "Out edge source! (Vertex " << out_edge->vertex_id() << "): " << std::endl;
+							//logstream(LOG_INFO) << "Out edge source! (Vertex " << out_edge->vertex_id() << "): " << std::endl;
 							EdgeDataType el = out_edge->get_data();
 							//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
 							updateRoots(el.roots, nl.roots);
 							out_edge->set_data(el);
+							if (updatedRoots){
+								gcontext.scheduler->add_task(out_edge->vertex_id());
+							}
 						}
 					}else{
 						logstream(LOG_INFO) << "Vertex has no roots, cant uppdate outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
