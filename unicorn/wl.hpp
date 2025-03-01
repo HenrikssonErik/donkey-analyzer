@@ -95,9 +95,9 @@ namespace graphchi {
 		 * on the base graph (before new edges stream in). */
 		VertexDataType nl;
 
-		if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+		/*if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
 			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
-		}
+		}*/
 
 		if (vertex.num_inedges() > 0) {
 		    graphchi_edge<EdgeDataType> * edge = vertex.inedge(0); /* Use the first inedge to get its original label. */
@@ -730,9 +730,7 @@ namespace graphchi {
 
 	std::string rootToString( uint32_t currentRoot, RootPair roots[], const char* delimiter = ",") { //TODO: remove delimiter for live version
 		std::string result;
-		bool firstElement = true;
-		static int runCount = 0;  // Persistent counter across function calls
-    	runCount++; 
+		bool firstElement = true; 
 
 		for (size_t i = 0; i < ROOTS; i++) {
 			if (roots[i].root == 0) continue;  // Skip zero values
@@ -746,10 +744,7 @@ namespace graphchi {
 			result += std::to_string(roots[i].root) + ":" + std::to_string(roots[i].order); //For nice printing
 			//result += std::to_string(roots[i]) + " ";  // Convert number to string
 		}
-		if (runCount > 100) {
 			logstream(LOG_INFO) << "Roots (currentRoot " << currentRoot << "): " << result << std::endl;
-			runCount = 0;
-		}
 		return result;
 	}
 
