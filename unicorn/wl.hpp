@@ -62,7 +62,7 @@ namespace graphchi {
 			}
 			if (vertex.num_inedges() > 0){
 				for (int i = 0; i < vertex.num_inedges(); i++) {
-					graphchi_edge<EdgeDataType> * in_edge = vertex.outedge(i);
+					graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 					EdgeDataType el = in_edge->get_data();
 					//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
 					updateRoots(nl.roots, el.roots);
