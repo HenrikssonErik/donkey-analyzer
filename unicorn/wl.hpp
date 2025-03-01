@@ -774,6 +774,7 @@ namespace graphchi {
 	}
 	void fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex, graphchi_context &gcontext){
 		bool updatedRoots = false;
+		bool updateSelf = false;
 		VertexDataType nl = vertex.get_data();
 				if((vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)) && nl.roots[0].root == 0){
 					updateRootOrderAndAddToRoots(nl.roots, vertex.id());
@@ -787,12 +788,20 @@ namespace graphchi {
 						if(el.roots[0].root != 0){
 							updatedRoots = updateRoots(nl.roots, el.roots);
 						}else{
-							gcontext.scheduler->add_task(in_edge->vertex_id());
+							gcontext.scheduler->add_task(in_edge->vertex_id(), true);
+							updateSelf = true;
 						}
 						vertex.set_data(nl);
 					}
+					if (updateSelf){
+						gcontext.scheduler->add_task(vertex.id(), true);
+					}
 				}else{
 					logstream(LOG_INFO) << "Vertex has no incoming edges! (Vertex " << vertex.id() << "): " << std::endl;
+				}
+
+				if(updatedRoots){
+					logstream(LOG_INFO) << "Roots have been updated! (Vertex " << vertex.id() << "): " << std::endl;
 				}
 
 				if (updatedRoots && vertex.num_outedges() > 0){
@@ -804,15 +813,11 @@ namespace graphchi {
 							//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
 							updateRoots(el.roots, nl.roots);
 							out_edge->set_data(el);
-							if (updatedRoots){
-								gcontext.scheduler->add_task(out_edge->vertex_id());
-							}
+							gcontext.scheduler->add_task(out_edge->vertex_id(), false);
 						}
 					}else{
 						logstream(LOG_INFO) << "Vertex has no roots, cant uppdate outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
 					}
-				}else{
-					logstream(LOG_INFO) << "Vertex has no outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
 				}
 				vertex.set_data(nl);
 				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
