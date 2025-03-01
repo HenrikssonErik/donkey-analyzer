@@ -55,9 +55,7 @@ namespace graphchi {
 		assert(false);
 	    }
 #endif
-		if (gcontext.iteration != 0) {
-			fixRoots(vertex);
-		}
+		
             if (gcontext.iteration == 0) {
 	        /* On the first iteration, initialize vertex label
 		 * on the base graph (before new edges stream in). */
@@ -107,9 +105,12 @@ namespace graphchi {
 #ifdef DEBUG
 		logstream(LOG_DEBUG) << "Original Label (" << vertex.id() << "): " << nl.lb[0] << std::endl;
 #endif
-            } else if (gcontext.iteration < K_HOPS + 1){	/* we know after K_HOPS iterations, we will be done with the base graph. */
+			fixRoots(vertex);
+            } else if (gcontext.iteration < K_HOPS + 1){
+				/* we know after K_HOPS iterations, we will be done with the base graph. */
                 /* After the first iteration, all nodes in the base graph are initialized. 
                  * All edges in the base graph should have "itr" >= 1. */
+				fixRoots(vertex);
 #ifdef DEBUG
 		/* This is simply a check to make sure that every vertex in the graph
 		 * at this point belongs to the base graph. */
@@ -250,6 +251,7 @@ namespace graphchi {
 	    } else {
 		/* We first check if the node is a new node or not so that we can do some initialization.
 		 * The node is new if any of its edges marks the node new. */
+		fixRoots(vertex);
 		bool is_new = false;
 		for (int i = 0; i < vertex.num_outedges(); i++) {
 		    graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
@@ -763,12 +765,13 @@ namespace graphchi {
 	}
 	void fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex){
 		VertexDataType nl = vertex.get_data();
-				if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+				if((vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)) && nl.roots[0].root == 0){
 					updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 				}
 				if (vertex.num_inedges() > 0){
 					for (int i = 0; i < vertex.num_inedges(); i++) {
 						graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
+						logstream(LOG_INFO) << "In edge source! (Vertex " << in_edge->vertex_id() << "): " << std::endl;
 						EdgeDataType el = in_edge->get_data();
 						//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
 						if(el.roots[0].root != 0){
@@ -783,6 +786,7 @@ namespace graphchi {
 					if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
 						for (int i = 0; i < vertex.num_outedges(); i++) {
 							graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
+							logstream(LOG_INFO) << "Out edge source! (Vertex " << out_edge->vertex_id() << "): " << std::endl;
 							EdgeDataType el = out_edge->get_data();
 							//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
 							updateRoots(el.roots, nl.roots);
