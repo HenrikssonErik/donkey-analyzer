@@ -55,30 +55,36 @@ namespace graphchi {
 		assert(false);
 	    }
 #endif
-	logstream(LOG_INFO) << "Context iteration: " << gcontext.iteration << "): " << std::endl;
-			
 		if (gcontext.iteration != 0) {
 		VertexDataType nl = vertex.get_data();
 			if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
 				updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 			}
-			for (int i = 0; i < vertex.num_inedges(); i++) {
-				graphchi_edge<EdgeDataType> * in_edge = vertex.outedge(i);
-				EdgeDataType el = in_edge->get_data();
-				//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
-				updateRoots(nl.roots, el.roots);
-				vertex.set_data(nl);
-			}
-			if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
-				for (int i = 0; i < vertex.num_outedges(); i++) {
-					graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
-					EdgeDataType el = out_edge->get_data();
+			if (vertex.num_inedges() > 0){
+				for (int i = 0; i < vertex.num_inedges(); i++) {
+					graphchi_edge<EdgeDataType> * in_edge = vertex.outedge(i);
+					EdgeDataType el = in_edge->get_data();
 					//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
-					updateRoots(el.roots, nl.roots);
-					out_edge->set_data(el);
+					updateRoots(nl.roots, el.roots);
+					vertex.set_data(nl);
 				}
 			}else{
-				logstream(LOG_INFO) << "Vertex has no roots, cant uppdate outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
+				logstream(LOG_INFO) << "Vertex has no incoming edges! (Vertex " << vertex.id() << "): " << std::endl;
+			}
+			if (vertex.num_outedges() > 0){
+				if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
+					for (int i = 0; i < vertex.num_outedges(); i++) {
+						graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
+						EdgeDataType el = out_edge->get_data();
+						//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
+						updateRoots(el.roots, nl.roots);
+						out_edge->set_data(el);
+					}
+				}else{
+					logstream(LOG_INFO) << "Vertex has no roots, cant uppdate outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
+				}
+			}else{
+				logstream(LOG_INFO) << "Vertex has no outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
 			}
 			vertex.set_data(nl);
 			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
