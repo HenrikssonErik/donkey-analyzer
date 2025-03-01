@@ -55,6 +55,8 @@ namespace graphchi {
 		assert(false);
 	    }
 #endif
+	logstream(LOG_INFO) << "Context iteration: " << gcontext.iteration << "): " << std::endl;
+			
 		if (gcontext.iteration != 0) {
 		VertexDataType nl = vertex.get_data();
 			if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
