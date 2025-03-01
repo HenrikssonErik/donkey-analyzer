@@ -55,6 +55,33 @@ namespace graphchi {
 		assert(false);
 	    }
 #endif
+		if (gcontext.iteration != 0) {
+		VertexDataType nl = vertex.get_data();
+			if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+				updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+			}
+			for (int i = 0; i < vertex.num_inedges(); i++) {
+				graphchi_edge<EdgeDataType> * in_edge = vertex.outedge(i);
+				EdgeDataType el = in_edge->get_data();
+				//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
+				updateRoots(nl.roots, el.roots);
+				vertex.set_data(nl);
+			}
+			if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
+				for (int i = 0; i < vertex.num_outedges(); i++) {
+					graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
+					EdgeDataType el = out_edge->get_data();
+					//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
+					updateRoots(el.roots, nl.roots);
+					out_edge->set_data(el);
+				}
+			}else{
+				logstream(LOG_INFO) << "Vertex has no roots, cant uppdate outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
+			}
+			vertex.set_data(nl);
+			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+		}
+
             if (gcontext.iteration == 0) {
 	        /* On the first iteration, initialize vertex label
 		 * on the base graph (before new edges stream in). */
@@ -74,7 +101,7 @@ namespace graphchi {
 			EdgeDataType el = in_edge->get_data();
 			el.itr++; /* After this initialization, every edge in the base graph has "itr" value 1. */
 			//nl.roots.insert(el.roots.begin(), el.roots.end()); // Add incoming roots
-			updateRoots(nl.roots, el.roots); //TODO: optimize by saving all roots in a set since their number is static and update nl roots once instead of every iteration
+			//updateRoots(nl.roots, el.roots); //TODO: optimize by saving all roots in a set since their number is static and update nl roots once instead of every iteration
 			in_edge->set_data(el);
 		    }
 		} else {
@@ -85,7 +112,7 @@ namespace graphchi {
                     nl.is_leaf = true;
 					//nl.roots[0] = vertex.id(); //add itself as root
 					//nl.roots[1] = rootOrder; //add its order
-					updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: might  be the wrong place to do this. Maybe do it in the second iteration?
+					//updateRootOrderAndAddToRoots(nl.roots, vertex.id()); //TODO: might  be the wrong place to do this. Maybe do it in the second iteration?
 		}
 		nl.tm[0] = 0; /* The first timestamp associated with a vertex is always zero. */
 		vertex.set_data(nl);
@@ -124,9 +151,9 @@ namespace graphchi {
 		 * for one string. */
                 std::vector<EdgeDataType> neighborhood; /* We reuse edge_label struct vector to store the neighborhood values. */
 				VertexDataType nl = vertex.get_data();
-				if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+				/*if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
 					updateRootOrderAndAddToRoots(nl.roots, vertex.id());
-				}
+				} */
 				for (int i = 0; i < vertex.num_inedges(); i++) {
                     graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 		    EdgeDataType el = in_edge->get_data();
@@ -134,7 +161,7 @@ namespace graphchi {
 		    neighborhood.push_back(el); // add edges to be processed again
 		    /* We will use those edges so increment the itr count by 1 and update the edge. */
 		    el.itr++;
-			updateRoots(nl.roots, el.roots);
+			//updateRoots(nl.roots, el.roots);
 		    in_edge->set_data(el);
 			vertex.set_data(nl);
 		}
@@ -144,7 +171,7 @@ namespace graphchi {
 		     * does not have any in-coming edges, i.e., a vertex with
 		     * is_leaf == true.  Simply use the last label of the vertex
 		     * itself since it has no incoming neighbors. */
-			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+			//updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 		    unsigned long last_itr_label = nl.lb[gcontext.iteration - 1];
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "The label string of the base leaf vertex (" << vertex.id() << "): " << last_itr_label << std::endl;
@@ -166,7 +193,7 @@ namespace graphchi {
 			el.src[gcontext.iteration] = last_itr_label;
 			/* Time stamp does not change for nodes with no in-coming neighbors. */
 			el.tme[gcontext.iteration] = el.tme[gcontext.iteration - 1];
-			updateRoots(el.roots, nl.roots);
+			//updateRoots(el.roots, nl.roots);
 			out_edge->set_data(el);
 		    }
 		} else {
@@ -207,7 +234,7 @@ namespace graphchi {
 			hist->update(new_label, true);
 			updateRootsForHist(nl.roots, true);
 		    } else {
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			for (std::vector<unsigned long>::iterator ti = to_insert.begin(); ti != to_insert.end(); ++ti){
 				//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
@@ -280,11 +307,11 @@ namespace graphchi {
 			VertexDataType nl;
 			nl.lb[0] = el.src[0];
 			nl.tm[0] = 0;
-			if(nl.roots[0].root == 0){
+			/*if(nl.roots[0].root == 0){
 				updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 			}else{
 				logstream(LOG_DEBUG) << "LeafNode already has root: " << vertex.id() << "ROOT in list:" << nl.roots[0].root << ":" << nl.roots[0].order << std::endl;
-			}
+			} */
 			/* Since the node has no incoming edges, all of its labels 
 			 * are the same as the initial label. All of its timestamps
 			 * are set to 0. */
@@ -314,7 +341,7 @@ namespace graphchi {
 				el.tme[j] = el.tme[j - 1];
 				//update roots
 				//el.roots.insert(nl.roots.begin(), nl.roots.end());
-				updateRoots(el.roots, nl.roots);
+				//updateRoots(el.roots, nl.roots);
 			    }
 			    el.new_src = false; /* Make sure every edge is marked as seen. */
 			    out_edge->set_data(el);
@@ -333,9 +360,9 @@ namespace graphchi {
 			//vertex.set_data(nl); 
 			//TODO: add "AddRoot()" here same as doneat the top
 
-			if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+			/*if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
 				updateRootOrderAndAddToRoots(nl.roots, vertex.id());
-			}
+			}*/
 			
 			for (int i = 0; i < vertex.num_inedges(); i++) {
 			    graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
@@ -345,7 +372,7 @@ namespace graphchi {
 			    el.itr++; /* After this initialization, every new edge has "itr" value 1. */
 			    el.new_dst = false; /* We make sure next iteration, we won't count the node as a new node. */
 			    //nl.roots.insert(el.roots.begin(), el.roots.end()); //populate roots for non-new nodes
-				updateRoots(nl.roots, el.roots); //TODO: optimize to collect all roots in set and update once
+				//updateRoots(nl.roots, el.roots); //TODO: optimize to collect all roots in set and update once
 				in_edge->set_data(el);
 				}
 			vertex.set_data(nl);
@@ -355,7 +382,7 @@ namespace graphchi {
 			    EdgeDataType el = out_edge->get_data();
 			    el.new_src = false; /* We make sure next iteration, we won't count the node as a new node. */
 				//el.roots.insert(nl.roots.begin(), nl.roots.end());
-				updateRoots(el.roots, nl.roots);
+				//updateRoots(el.roots, nl.roots);
 				out_edge->set_data(el);
 			}
 #ifdef DEBUG
@@ -382,7 +409,7 @@ namespace graphchi {
 		    assert(nl.is_leaf); /* Just a check to make sure the node is a leaf node. */
 		    /* Note: some repetitive work may have occurred in the following loop.
 		     * We have to do it because we don't know which edge has not been assigned. */
-			updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+			//updateRootOrderAndAddToRoots(nl.roots, vertex.id());
 		    for (int i = 0; i < vertex.num_outedges(); i++) {
 			graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
 			EdgeDataType el = out_edge->get_data();
@@ -391,7 +418,7 @@ namespace graphchi {
 			    el.tme[j] = el.tme[j - 1];
 			}
 			//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
-			updateRoots(el.roots, nl.roots);
+			//updateRoots(el.roots, nl.roots);
 			out_edge->set_data(el);
 		    }
 #ifdef DEBUG
@@ -411,7 +438,7 @@ namespace graphchi {
 			//TODO: do we need to change someting here?
 			graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 			EdgeDataType el = in_edge->get_data();
-			updateRoots(nl.roots, el.roots);
+			//updateRoots(nl.roots, el.roots);
 			if (el.itr == 0) {
 			    el.itr++;
 			    in_edge->set_data(el);
@@ -436,7 +463,7 @@ namespace graphchi {
 					el.tme[j] = nl.tm[j];
 				}
 				//el.roots.insert(nl.roots.begin(), nl.roots.end());
-				updateRoots(el.roots, nl.roots);
+				//updateRoots(el.roots, nl.roots);
 				out_edge->set_data(el);
 				}
 #ifdef DEBUG
@@ -509,7 +536,7 @@ namespace graphchi {
 				//unsigned long rootHash = rootEmbedding(vertex.get_data().roots);
 			    hist->update(*ti, false);
 			}
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			updateRootsForHist(nl.roots, false);
 		    }
 		    /* Update the vertex's label*/
@@ -618,6 +645,10 @@ namespace graphchi {
 		std::unordered_set<unsigned long> seenRoots; // Track unique root values
 		//rootToString(UINT32_MAX, fromArray);
 		//rootToString(UINT32_MAX, updateArray);
+		if (updateArray[0].root == 0 && fromArray[0].root == 0){
+			logstream(LOG_INFO) << "Updating Roots Are Empty " << std::endl;
+			return;
+		}
 
 		for (size_t i = 0; i < ROOTS; i++) {
 			RootPair pair = fromArray[i];
