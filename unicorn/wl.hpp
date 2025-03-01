@@ -786,6 +786,8 @@ namespace graphchi {
 						//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
 						if(el.roots[0].root != 0){
 							updatedRoots = updateRoots(nl.roots, el.roots);
+						}else{
+							gcontext.scheduler->add_task(in_edge->vertex_id());
 						}
 						vertex.set_data(nl);
 					}
