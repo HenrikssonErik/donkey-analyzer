@@ -56,42 +56,8 @@ namespace graphchi {
 	    }
 #endif
 		if (gcontext.iteration != 0) {
-		VertexDataType nl = vertex.get_data();
-			if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
-				updateRootOrderAndAddToRoots(nl.roots, vertex.id());
-			}
-			if (vertex.num_inedges() > 0){
-				for (int i = 0; i < vertex.num_inedges(); i++) {
-					graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
-					EdgeDataType el = in_edge->get_data();
-					//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
-					if(el.roots[0].root != 0){
-						updateRoots(nl.roots, el.roots);
-					}
-					vertex.set_data(nl);
-				}
-			}else{
-				logstream(LOG_INFO) << "Vertex has no incoming edges! (Vertex " << vertex.id() << "): " << std::endl;
-			}
-			if (vertex.num_outedges() > 0){
-				if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
-					for (int i = 0; i < vertex.num_outedges(); i++) {
-						graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
-						EdgeDataType el = out_edge->get_data();
-						//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
-						updateRoots(el.roots, nl.roots);
-						out_edge->set_data(el);
-					}
-				}else{
-					logstream(LOG_INFO) << "Vertex has no roots, cant uppdate outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
-				}
-			}else{
-				logstream(LOG_INFO) << "Vertex has no outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
-			}
-			vertex.set_data(nl);
-			std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+			fixRoots(vertex);
 		}
-
             if (gcontext.iteration == 0) {
 	        /* On the first iteration, initialize vertex label
 		 * on the base graph (before new edges stream in). */
@@ -795,5 +761,41 @@ namespace graphchi {
 			} //add the root counts to the histogram by incrementing the value with COUNTER amount
 		}
 	}
+	void fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex){
+		VertexDataType nl = vertex.get_data();
+				if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+					updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+				}
+				if (vertex.num_inedges() > 0){
+					for (int i = 0; i < vertex.num_inedges(); i++) {
+						graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
+						EdgeDataType el = in_edge->get_data();
+						//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
+						if(el.roots[0].root != 0){
+							updateRoots(nl.roots, el.roots);
+						}
+						vertex.set_data(nl);
+					}
+				}else{
+					logstream(LOG_INFO) << "Vertex has no incoming edges! (Vertex " << vertex.id() << "): " << std::endl;
+				}
+				if (vertex.num_outedges() > 0){
+					if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
+						for (int i = 0; i < vertex.num_outedges(); i++) {
+							graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
+							EdgeDataType el = out_edge->get_data();
+							//el.roots.insert(nl.roots.begin(), nl.roots.end()); //TODO: is this needed?
+							updateRoots(el.roots, nl.roots);
+							out_edge->set_data(el);
+						}
+					}else{
+						logstream(LOG_INFO) << "Vertex has no roots, cant uppdate outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
+					}
+				}else{
+					logstream(LOG_INFO) << "Vertex has no outgoing edges! (Vertex " << vertex.id() << "): " << std::endl;
+				}
+				vertex.set_data(nl);
+				std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
+		}
 };
 }
