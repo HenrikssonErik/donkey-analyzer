@@ -700,19 +700,20 @@ namespace graphchi {
 
 		if (gcontext.iteration > highestIteration){
 			std::string printRoots;
-			for (int num :seenRoots){
+			for (uint32_t num :seenRoots){
 				
 				if (!firstElement) {
-					result += delimiter;  // Add delimiter **only after the first element**
+					printRoots += delimiter;  // Add delimiter **only after the first element**
 				} else {
 					firstElement = false;  // Mark that the first element has been added
 				}
 				printRoots += std::to_string(num);
 			}
 			logstream(LOG_INFO) << "Roots seen last iteration: " << printRoots << std::endl;
-			logstream(LOG_INFO) << "Vertex without roots: " << vertexWithNoRoots << std::endl;
+			logstream(LOG_INFO) << "Vertecis without roots: " << vertexWithNoRoots << std::endl;
 			highestIteration = gcontext.iteration;
 			vertexWithNoRoots = 0;
+			seenRoots.clear();
 			firstElement = true;
 		}
 
