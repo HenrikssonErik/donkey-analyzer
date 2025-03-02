@@ -709,11 +709,11 @@ namespace graphchi {
 				}
 				printRoots += std::to_string(num);
 			}
-			logstream(LOG_INFO) << "Roots seen last iteration: " << printRoots << std::endl;
+			logstream(LOG_INFO) << "Roots seen: " << printRoots << std::endl;
 			logstream(LOG_INFO) << "Vertecis without roots: " << vertexWithNoRoots << std::endl;
 			highestIteration = gcontext.iteration;
 			vertexWithNoRoots = 0;
-			seenRoots.clear();
+			//seenRoots.clear();
 			firstElement = true;
 		}
 
@@ -795,20 +795,25 @@ namespace graphchi {
 						if(el.roots[0].root != 0){
 							updatedRoots = updatedRoots || updateRoots(nl.roots, el.roots);
 						}else{
+							if(! gcontext.scheduler->is_scheduled(in_edge->vertex_id())){ //to avoid exessive scheduling
 							gcontext.scheduler->add_task(in_edge->vertex_id(), true);
+							}
 						}
 					}
 				}
 
 				if (vertex.num_outedges() > 0){
 					if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
+						bool updatedSpecificEdge = false;
 						for (int i = 0; i < vertex.num_outedges(); i++) {
 							graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
 							EdgeDataType el = out_edge->get_data();
-							updatedRoots = updatedRoots || updateRoots(el.roots, nl.roots);
+							updatedSpecificEdge =  updateRoots(el.roots, nl.roots);
 							out_edge->set_data(el);
-							if (updatedRoots){ //some edges that hasnt recieved an update might be scheduled nonetheless. Should be ok
-								gcontext.scheduler->add_task(out_edge->vertex_id(), true);
+							if (updatedRoots && updatedSpecificEdge){ //some edges that hasnt recieved an update might be scheduled nonetheless. Should be ok
+								if(! gcontext.scheduler->is_scheduled(out_edge->vertex_id())){ //to avoid exessive scheduling
+									gcontext.scheduler->add_task(out_edge->vertex_id(), true);
+								}
 							}
 						}
 					}
