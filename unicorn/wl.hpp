@@ -96,7 +96,7 @@ namespace graphchi {
 		//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 		//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 		hist->update(nl.lb[0], true);
-		updateRootsForHist(nl.roots, true);
+		//updateRootsForHist(nl.roots, true);
 
 		/* Schedule itself for the next iteration. */
 		if (gcontext.scheduler != NULL) {
@@ -158,7 +158,7 @@ namespace graphchi {
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 		    hist->update(last_itr_label, true);
-			updateRootsForHist(nl.roots, true);
+			//updateRootsForHist(nl.roots, true);
 		    /* Update the vertex's label vector. */
 		    nl.lb[gcontext.iteration] = last_itr_label;
 		    nl.tm[gcontext.iteration] = 0; /* All timestamps of the leaf vertex is set to be 0. */
@@ -209,7 +209,7 @@ namespace graphchi {
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding(nl.roots);
 			hist->update(new_label, true);
-			updateRootsForHist(nl.roots, true);
+			//updateRootsForHist(nl.roots, true);
 		    } else {
 			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
@@ -219,7 +219,7 @@ namespace graphchi {
 				//unsigned long rootHash = rootEmbedding(nl.roots);
 			    hist->update(*ti, true);
 				}
-			updateRootsForHist(nl.roots, true);
+			//updateRootsForHist(nl.roots, true);
 		    }
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "New label of vertex (" << vertex.id() << "): " << new_label << std::endl;
@@ -307,7 +307,7 @@ namespace graphchi {
 				//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 				//unsigned long rootHash = rootEmbedding( nl.roots);
 			    hist->update(nl.lb[i], false);
-				updateRootsForHist(nl.roots, false);
+				//updateRootsForHist(nl.roots, false);
 			}
 			/* Populate the labels to all of its out-going edges. */
 			for (int i = 0; i < vertex.num_outedges(); i++) {
@@ -372,7 +372,7 @@ namespace graphchi {
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			hist->update(nl.lb[0], false);
-			updateRootsForHist(nl.roots, false);
+			//updateRootsForHist(nl.roots, false);
 		    }
 		}
 		/* The node is known to the system. */
@@ -500,7 +500,7 @@ namespace graphchi {
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding( vertex.get_data().roots);
 			hist->update(new_label, false);
-			updateRootsForHist(nl.roots, false);
+			//updateRootsForHist(nl.roots, false);
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			bool first = true;
@@ -515,7 +515,7 @@ namespace graphchi {
 			    hist->update(*ti, false);
 			}
 			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
-			updateRootsForHist(nl.roots, false);
+			//updateRootsForHist(nl.roots, false);
 		    }
 		    /* Update the vertex's label*/
 		    nl.lb[min_itr] = new_label;
