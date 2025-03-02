@@ -788,43 +788,40 @@ namespace graphchi {
 				nl.rootChecked = true;
 			}
 
-				if (vertex.num_inedges() > 0){
-					for (int i = 0; i < vertex.num_inedges(); i++) {
-						graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
-						EdgeDataType el = in_edge->get_data();
-						if(el.roots[0].root != 0){
-							updatedRoots = updatedRoots || updateRoots(nl.roots, el.roots);
-						}else{
-							if(! gcontext.scheduler->is_scheduled(in_edge->vertex_id())){ //to avoid exessive scheduling
-							gcontext.scheduler->add_task(in_edge->vertex_id(), true);
-							}
+			for (int i = 0; i < vertex.num_inedges(); i++) {
+				graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
+				EdgeDataType el = in_edge->get_data();
+				if(el.roots[0].root != 0){
+					updatedRoots = updatedRoots || updateRoots(nl.roots, el.roots);
+				}else{
+					if(! gcontext.scheduler->is_scheduled(in_edge->vertex_id())){ //to avoid exessive scheduling
+					gcontext.scheduler->add_task(in_edge->vertex_id(), true);
+					}
+				}
+			}
+		
+
+			if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
+				bool updatedSpecificEdge = false;
+				for (int i = 0; i < vertex.num_outedges(); i++) {
+					graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
+					EdgeDataType el = out_edge->get_data();
+					updatedSpecificEdge =  updateRoots(el.roots, nl.roots);
+					out_edge->set_data(el);
+					if (updatedRoots && updatedSpecificEdge){ //some edges that hasnt recieved an update might be scheduled nonetheless. Should be ok
+						if(! gcontext.scheduler->is_scheduled(out_edge->vertex_id())){ //to avoid exessive scheduling
+							gcontext.scheduler->add_task(out_edge->vertex_id(), false);
 						}
 					}
 				}
+			}
 
-				if (vertex.num_outedges() > 0){
-					if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
-						bool updatedSpecificEdge = false;
-						for (int i = 0; i < vertex.num_outedges(); i++) {
-							graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
-							EdgeDataType el = out_edge->get_data();
-							updatedSpecificEdge =  updateRoots(el.roots, nl.roots);
-							out_edge->set_data(el);
-							if (updatedRoots && updatedSpecificEdge){ //some edges that hasnt recieved an update might be scheduled nonetheless. Should be ok
-								if(! gcontext.scheduler->is_scheduled(out_edge->vertex_id())){ //to avoid exessive scheduling
-									gcontext.scheduler->add_task(out_edge->vertex_id(), false);
-								}
-							}
-						}
-					}
-				}
-
-				if(updatedRoots){
-					logstream(LOG_INFO) << "Roots have been updated! Re-scheduled out-edges! (Vertex " << vertex.id() << ")" << std::endl;
-				}
+			/*if(updatedRoots){
+				logstream(LOG_INFO) << "Roots have been updated! Re-scheduled out-edges! (Vertex " << vertex.id() << ")" << std::endl;
+			}*/
 
 				vertex.set_data(nl);
-				rootToPrint(vertex.id(), vertex.get_data().roots, gcontext);
+				//rootToPrint(vertex.id(), vertex.get_data().roots, gcontext);
 		}
 
 	bool isRoot(graphchi_vertex<VertexDataType, EdgeDataType> &vertex){
