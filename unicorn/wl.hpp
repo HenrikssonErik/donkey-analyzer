@@ -852,7 +852,7 @@ namespace graphchi {
 			}
 		}
 		//should return true if, no inedges, inedge > outedge
-		if((smallestOut < smallestIn) || vertex.num_inedges()){
+		if((smallestOut < smallestIn) || vertex.num_inedges() == 0){
 			return true;
 		 }
 		return false;		
