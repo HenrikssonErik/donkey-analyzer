@@ -87,7 +87,7 @@ typedef struct edge_label {
     int itr;
     bool new_src;
     bool new_dst;
-    RootPair roots[ROOTS] = {}; //every second value is for when the root was created
+    RootPair roots[ROOTS] = {};
 } EdgeDataType;
 
 /* Node remembers all its most-updated labels "lb" and timestamps "tm".
@@ -97,6 +97,7 @@ typedef struct node_label {
     unsigned long tm[K_HOPS+1];
     bool is_leaf;
     RootPair roots[ROOTS] ={};
+    bool rootChecked = false;
 } VertexDataType;
 
 /* Each histogram element is associated with r, beta, c, which
