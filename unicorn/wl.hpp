@@ -826,6 +826,7 @@ namespace graphchi {
 
 		unsigned long smallestOut = 0;
 		unsigned long smallestIn = 0;
+
 		if (vertex.num_inedges() > 0){
 			graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(0);
 			EdgeDataType el = in_edge->get_data();
@@ -852,7 +853,7 @@ namespace graphchi {
 			}
 		}
 		//should return true if, no inedges, inedge > outedge
-		if((smallestOut < smallestIn) || vertex.num_inedges() == 0){
+		if((smallestOut != 0 && (smallestOut < smallestIn)) || vertex.num_inedges() == 0){
 			return true;
 		 }
 		return false;		
