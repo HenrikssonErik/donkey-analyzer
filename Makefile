@@ -183,9 +183,9 @@ evasion_mimicry_RCA: sb
 
 attack_mimicry_RCA: sb
 	cd ../../data && mkdir -p test_mimicry_attack_RCA
-	cd ../../data && mkdir -p test_mimicry_attack_root_RCA
+	cd ../../data/test_mimicry_attack_RCA && mkdir -p root_sketches
 	number=0 ; while [ $$number -le 99 ] ; do \
-		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-attack-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/test_mimicry_attack_RCA/sketch-attack-$$number.txt sketch_root ../../data/test_mimicry_attack_root_RCA/sketch-attack-root-$$number.txt chunkify 1 chunk_size 50 ; \
+		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-attack-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/test_mimicry_attack_RCA/sketch-attack-$$number.txt sketch_root ../../data/test_mimicry_attack_RCA/root_sketches/sketch-attack-root-$$number.txt chunkify 1 chunk_size 50 ; \
 		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt.* ; \
 		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt_* ; \
 		number=`expr $$number + 1` ; \
