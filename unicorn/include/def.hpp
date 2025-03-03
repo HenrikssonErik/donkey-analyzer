@@ -72,9 +72,10 @@ extern std::string HIST_FILE;
  * - "new_src": whether the source node is new, never-before-seen.
  * - "new_dst": whether the destination node is new. never-before-seen.
  */
-struct RootPair {
+struct Root {
 	uint32_t root;
 	uint32_t order;
+    unsigned long tme;
 };
 
 typedef struct edge_label {
@@ -87,7 +88,7 @@ typedef struct edge_label {
     int itr;
     bool new_src;
     bool new_dst;
-    RootPair roots[ROOTS] = {};
+    Root roots[ROOTS] = {};
 } EdgeDataType;
 
 /* Node remembers all its most-updated labels "lb" and timestamps "tm".
@@ -96,7 +97,7 @@ typedef struct node_label {
     unsigned long lb[K_HOPS+1];
     unsigned long tm[K_HOPS+1];
     bool is_leaf;
-    RootPair roots[ROOTS] ={};
+    Root roots[ROOTS] ={};
     bool rootChecked = false;
 } VertexDataType;
 

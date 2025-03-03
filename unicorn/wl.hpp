@@ -599,12 +599,12 @@ namespace graphchi {
 	void after_exec_interval(vid_t window_st, vid_t window_en, graphchi_context &gcontext) {
 	}
 
-	bool updateRoots(RootPair updateArray[], RootPair fromArray[]) {
+	bool updateRoots(Root updateArray[], Root fromArray[], unsigned long edgeTme) {
 		
-		std::vector<RootPair> validPairs;  // Store non-zero unique pairs
+		std::vector<Root> validPairs;  // Store non-zero unique pairs
 		//std::vector<RootPair> zeroPairs;   // Store zero pairs
 		std::unordered_set<unsigned long> seenRoots; // Track unique root values
-		RootPair oldArray[ROOTS];
+		Root oldArray[ROOTS];
     	std::memcpy(oldArray, updateArray, sizeof(oldArray));
 
 		if (updateArray[0].root == 0 && fromArray[0].root == 0){
@@ -613,13 +613,15 @@ namespace graphchi {
 		}
 
 		for (size_t i = 0; i < ROOTS; i++) {
-			RootPair pair = fromArray[i];
+			Root pair = fromArray[i];
 	
 			if (pair.root == 0) {
 				continue; 
 			} else if (seenRoots.find(pair.root) == seenRoots.end()) { //to avoid duplicate roots
-				seenRoots.insert(pair.root);  // Mark root as seen
-				validPairs.push_back(pair);   // Store unique valid values
+				if (pair.tme < edgeTme){ //only update edges that has been created after the root was created
+					seenRoots.insert(pair.root);  // Mark root as seen
+					validPairs.push_back(pair);   // Store unique valid values
+				}
 			}
 			/*else {
 				// If root is already seen, check if the new order is greater
@@ -639,7 +641,7 @@ namespace graphchi {
 		}
 
 		for (size_t i = 0; i < ROOTS; i++) {
-			RootPair pair = {updateArray[i]};
+			Root pair = {updateArray[i]};
 	
 			if (pair.root == 0) {
 				continue;
@@ -664,7 +666,7 @@ namespace graphchi {
 			}*/
 		}
 	
-		std::sort(validPairs.begin(), validPairs.end(), [](const RootPair& a, const RootPair& b) {
+		std::sort(validPairs.begin(), validPairs.end(), [](const Root& a, const Root& b) {
 			return a.order < b.order;
 		});
 	
@@ -690,7 +692,7 @@ namespace graphchi {
 		}
 	}
 
-	void rootToPrint( uint32_t currentRoot, RootPair roots[],graphchi_context &gcontext, const char* delimiter = ",") { 
+	void rootToPrint( uint32_t currentRoot, Root roots[],graphchi_context &gcontext, const char* delimiter = ",") { 
 		std::string result;
 		bool firstElement = true; 
 
@@ -739,7 +741,7 @@ namespace graphchi {
 		return;
 	}
 
-	void updateRootOrderAndAddToRoots(RootPair roots[], uint32_t rootToAdd) {
+	void updateRootOrderAndAddToRoots(Root roots[], uint32_t rootToAdd, unsigned long tme) {
 		static std::unordered_map<uint32_t, uint32_t> seenRoots;  // Map to store roots and their corresponding rootOrder
 		//std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
 		uint32_t rootOrderToAssign = 0;
@@ -759,15 +761,15 @@ namespace graphchi {
 			rootOrderMutex.unlock(); //unlock rootOrder
 			logstream(LOG_INFO) << "Updated rootOrder: " << rootOrderToAssign << "For vertex: " << rootToAdd << std::endl;
 		}
-		RootPair newRoot = {rootToAdd, rootOrderToAssign};
+		Root newRoot = {rootToAdd, rootOrderToAssign, tme};
 		roots[0] = newRoot;
 	}
 
 	//TODO: input in new histogram
-	void updateRootsForHist(RootPair roots[], bool base) {
+	void updateRootsForHist(Root roots[], bool base) {
 		for (size_t i = 0; i < ROOTS; ++i) {
 			// Assuming nl.lb[0] is used in the update call, and rootHash is defined
-			RootPair root = roots[i];
+			Root root = roots[i];
 			if (root.root != 0){
 				unsigned long rootHash = root.root;  // will convert the value to a unsinged long
 				hist->update(rootHash, base, ROOTCOUNTER);
@@ -782,7 +784,7 @@ namespace graphchi {
 
 			if(!nl.rootChecked){
 				if(isRoot(vertex)){
-					updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+					updateRootOrderAndAddToRoots(nl.roots, vertex.id(), vertex.get_data().tm[0]);
 					updatedRoots = true;
 				}
 				nl.rootChecked = true;
@@ -792,7 +794,7 @@ namespace graphchi {
 				graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 				EdgeDataType el = in_edge->get_data();
 				if(el.roots[0].root != 0){
-					updatedRoots = updatedRoots || updateRoots(nl.roots, el.roots);
+					updatedRoots = updatedRoots || updateRoots(nl.roots, el.roots, el.tme[0]);
 				}else{
 					if(! gcontext.scheduler->is_scheduled(in_edge->vertex_id())){ //to avoid exessive scheduling
 					gcontext.scheduler->add_task(in_edge->vertex_id(), true);
@@ -806,7 +808,7 @@ namespace graphchi {
 				for (int i = 0; i < vertex.num_outedges(); i++) {
 					graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
 					EdgeDataType el = out_edge->get_data();
-					updatedSpecificEdge =  updateRoots(el.roots, nl.roots);
+					updatedSpecificEdge =  updateRoots(el.roots, nl.roots, el.tme[0]);
 					out_edge->set_data(el);
 					if (updatedRoots && updatedSpecificEdge){ //some edges that hasnt recieved an update might be scheduled nonetheless. Should be ok
 						if(! gcontext.scheduler->is_scheduled(out_edge->vertex_id())){ //to avoid exessive scheduling
