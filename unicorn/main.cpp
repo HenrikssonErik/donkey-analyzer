@@ -376,7 +376,7 @@ int main(int argc, const char ** argv) {
     assert(SFP_Root != NULL);
     histRoot->record_sketch(SFP_Root);
     /* Once we are done, we close the sketch file. */
-    if (ferror(SFP_Root) != 0 || fclose(SFP) != 0) {
+    if (ferror(SFP_Root) != 0 || fclose(SFP_Root) != 0) {
         logstream(LOG_ERROR) << "Unable to close the root sketch file: " << sketch_file_root <<  std::endl;
         return -1;
     }
