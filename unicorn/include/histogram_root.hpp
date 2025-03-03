@@ -83,7 +83,7 @@ private:
 #endif
     
     /* The lock needed to update histogram map. */
-    std::mutex histogram_map_lock;
+    std::mutex histogram_root_map_lock;
 };
 
 #include "histogram_root.cpp"
