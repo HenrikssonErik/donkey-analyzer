@@ -788,7 +788,7 @@ namespace graphchi {
 					updatedRoots = updatedRoots || updateRoots(nl.roots, el.roots, el.tme[0]);
 				}else{
 					if(! gcontext.scheduler->is_scheduled(in_edge->vertex_id())){ //to avoid exessive scheduling
-					gcontext.scheduler->add_task(in_edge->vertex_id(), true);
+					gcontext.scheduler->add_task(in_edge->vertex_id(), false);
 					}
 				}
 			}
