@@ -17,28 +17,28 @@
 #include <cstdlib>
 #include <string>
 
-#include "include/histogram.hpp"
+#include "include/histogram_root.hpp"
 
-Histogram* Histogram::histogram;
+HistogramRoot* HistogramRoot::histogram;
 
 /* Singleton should always return the same instance. */
-Histogram* Histogram::get_instance() {
+HistogramRoot* HistogramRoot::get_instance() {
     if (!histogram)
-        histogram = new Histogram();
+        histogram = new HistogramRoot();
     return histogram;
 }
 
-Histogram::~Histogram() {
+HistogramRoot::~HistogramRoot() {
     delete histogram;
 }
 
 /* Sample random values for hashing histogram. */
-struct hist_elem Histogram::construct_hist_elem(unsigned long label) {
+struct hist_elem HistogramRoot::construct_hist_elem(unsigned long label) {
     struct hist_elem new_elem;
     std::default_random_engine r_generator(label);
     std::default_random_engine c_generator(label / 2);
     std::default_random_engine beta_generator(label);
-    for (int i = 0; i < SKETCH_SIZE; i++) {
+    for (int i = 0; i < SKETCH_SIZE_ROOT; i++) {
         new_elem.r[i] = gamma_dist(r_generator);
         new_elem.beta[i] = uniform_dist(beta_generator);
         new_elem.c[i] = gamma_dist(c_generator);
@@ -49,7 +49,7 @@ struct hist_elem Histogram::construct_hist_elem(unsigned long label) {
 
 /* Decay values in the histogram map, and record the sketch to the 
  * file @fp, if WINDOW updates have performed (if WINDOW is used). */
-void Histogram::decay(FILE* fp) {
+void HistogramRoot::decay(FILE* fp) {
     this->histogram_map_lock.lock();
     this->t++;
 #ifdef USEWINDOW
@@ -62,7 +62,7 @@ void Histogram::decay(FILE* fp) {
         for (it = this->histogram_map.begin(); it != this->histogram_map.end(); it++)
             it->second *= this->powerful;
 	/* Decay sketch values. */
-        for (int i = 0; i < SKETCH_SIZE; i++)
+        for (int i = 0; i < SKETCH_SIZE_ROOT; i++)
             this->hash[i] *= this->powerful;
         this->t = 0;  /* Reset the timer. */
     }
@@ -70,7 +70,7 @@ void Histogram::decay(FILE* fp) {
      * WINDOW as frequency to generate sketches. */
 #ifdef USEWINDOW
     if (this->w >= WINDOW) {
-        for (int i = 0; i < SKETCH_SIZE; i++)
+        for (int i = 0; i < SKETCH_SIZE_ROOT; i++)
             fprintf(fp,"%lu ", this->sketch[i]);
         fprintf(fp, "\n");
         this->w = 0; /* Reset the timer. */
@@ -85,11 +85,10 @@ void Histogram::decay(FILE* fp) {
 #endif
     this->histogram_map_lock.unlock();
 }
-
 /* Insert @label to the histogram if it does not exist; otherwise, update its value.
  * If @base true, we do not update hash value; we only update them during streaming.
  * We do not decay the histogram or the sketch in this function. */
-void Histogram::update(unsigned long label, bool base, double counter = 1) {
+void HistogramRoot::update(unsigned long label, bool base, double counter = 1) {
 
     this->histogram_map_lock.lock();
     /* We add the new element or update the existing element in the
@@ -115,7 +114,7 @@ void Histogram::update(unsigned long label, bool base, double counter = 1) {
 	srand(label);
 	int pos1 = rand() % PREGEN;
 	int pos2 = rand() % PREGEN;
-	for (int i = 0; i < SKETCH_SIZE; i++) {
+	for (int i = 0; i < SKETCH_SIZE_ROOT; i++) {
             /* Compute the new hash value using picked random variables. */
             double c = this->gamma_param[pos2][i];
 	    double y = (rst.first)->second / this->r_beta_param[pos1][i];
@@ -131,7 +130,7 @@ void Histogram::update(unsigned long label, bool base, double counter = 1) {
         /* If we do not use pre-sampled random values, we sample first
 	 * using the label and then update the hash values and sketches. */
         struct hist_elem generated_param = this->construct_hist_elem(label);
-	for (int i = 0; i < SKETCH_SIZE; i++) {
+	for (int i = 0; i < SKETCH_SIZE_ROOT; i++) {
             /* Compute the new hash value a. */
             double r = generated_param.r[i];
 	    double beta = generated_param.beta[i];
@@ -153,7 +152,7 @@ void Histogram::update(unsigned long label, bool base, double counter = 1) {
 /* Create (and initialize) a sketch after the base graph has been processed by GraphChi WL.
  * This function is called only once during initialization. If MEMORY is set to 1, we also
  * pre-sample some random values to speed up computations later. */
-void Histogram::create_sketch() {
+void HistogramRoot::create_sketch() {
     this->histogram_map_lock.lock();
 #ifndef MEMORY
     /* If we decide not to pre-sample, we can still optimize a bit by
@@ -165,7 +164,7 @@ void Histogram::create_sketch() {
 	base_map.insert(std::pair<unsigned long, struct hist_elem>(label, new_elem));
     }
 
-    for (int i = 0; i < SKETCH_SIZE; i++) {
+    for (int i = 0; i < SKETCH_SIZE_ROOT; i++) {
         /* Compute the hash value. */
         std::map<unsigned long, double>::iterator histoit = this->histogram_map.begin();
 	unsigned long label = histoit->first;
@@ -207,7 +206,7 @@ void Histogram::create_sketch() {
 	std::default_random_engine r_generator(randomized_i);
 	std::default_random_engine beta_generator(randomized_i);
 
-	for (int j = 0; j < SKETCH_SIZE; j++) {
+	for (int j = 0; j < SKETCH_SIZE_ROOT; j++) {
             this->gamma_param[i][j] = gamma_dist(r_generator);
 	    double uniform_param = uniform_dist(beta_generator);
 	    this->r_beta_param[i][j] = pow(M_E, this->gamma_param[i][j] * uniform_param);
@@ -216,7 +215,7 @@ void Histogram::create_sketch() {
 	gamma_dist.reset();
     }
     /* Initialize sketch. */
-    for (int i = 0; i < SKETCH_SIZE; i++) {
+    for (int i = 0; i < SKETCH_SIZE_ROOT; i++) {
         std::map<unsigned long, double>::iterator histoit = this->histogram_map.begin();
 	unsigned long label = histoit->first;
 
@@ -250,9 +249,9 @@ void Histogram::create_sketch() {
 }
 
 /* Write the sketch to the file @fp. */
-void Histogram::record_sketch(FILE* fp) {
+void HistogramRoot::record_sketch(FILE* fp) {
     this->histogram_map_lock.lock();
-    for (int i = 0; i < SKETCH_SIZE; i++) {
+    for (int i = 0; i < SKETCH_SIZE_ROOT; i++) {
         fprintf(fp,"%lu ", this->sketch[i]);
     }
     fprintf(fp, "\n");
@@ -261,7 +260,7 @@ void Histogram::record_sketch(FILE* fp) {
 }
 
 /* Getter: to get the sketch. */
-unsigned long* Histogram::get_sketch() {
+unsigned long* HistogramRoot::get_sketch() {
     return this->sketch;
 }
 

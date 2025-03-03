@@ -47,6 +47,7 @@ extern bool CHUNKIFY;
 extern int CHUNK_SIZE;
 /* Sketch file to write the sketch. */
 extern FILE * SFP;
+extern FILE * SFP_Root;
 #ifdef VIZ
 /* Histogram file path to write histogram values.
  * We write one histogram per file. This is for

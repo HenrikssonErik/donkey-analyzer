@@ -75,7 +75,7 @@ unicorn/% : unicorn/%.cpp $(HEADERS)
 swdebug: CPPFLAGS += -DSKETCH_SIZE=2000 -DK_HOPS=3 -DMEMORY -DPREGEN=10000 -DUSEWINDOW -DBASESKETCH -DDEBUG -g
 swdebug: unicorn/main
 
-sb: CPPFLAGS += -DSKETCH_SIZE=2000 -DK_HOPS=3 -DMEMORY -DPREGEN=10000 -DROOTS=3 -DROOTCOUNTER=0.01 -g
+sb: CPPFLAGS += -DSKETCH_SIZE=2000 -DK_HOPS=3 -DMEMORY -DPREGEN=10000 -DROOTS=3 -DSKETCH_SIZE_ROOT=10 -g
 sb: unicorn/main
 
 ######################Unicorn Toy Example################################################
@@ -174,7 +174,7 @@ train_mimicry_RCA: sb
 
 evasion_mimicry_RCA: sb
 		cd ../../data && mkdir -p test_mimicry_evasion_RCA
-	number=0 ; while [ $$number -le 5 ] ; do \
+	number=0 ; while [ $$number -le 99 ] ; do \
 		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-evasion-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/test_mimicry_evasion_RCA/sketch-evasion-$$number.txt chunkify 1 chunk_size 50 ; \
 		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt.* ; \
 		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-evasion-$$number.txt_* ; \
@@ -183,8 +183,9 @@ evasion_mimicry_RCA: sb
 
 attack_mimicry_RCA: sb
 	cd ../../data && mkdir -p test_mimicry_attack_RCA
+	cd ../../data && mkdir -p test_mimicry_attack_root_RCA
 	number=0 ; while [ $$number -le 99 ] ; do \
-		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-attack-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/test_mimicry_attack_RCA/sketch-attack-$$number.txt chunkify 1 chunk_size 50 ; \
+		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt stream ../../data/mimicry_data_parsed/stream_test/stream-attack-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/test_mimicry_attack_RCA/sketch-attack-$$number.txt sketch_root ../../data/test_mimicry_attack_root_RCA/sketch-attack-root-$$number.txt chunkify 1 chunk_size 50 ; \
 		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt.* ; \
 		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-attack-$$number.txt_* ; \
 		number=`expr $$number + 1` ; \
