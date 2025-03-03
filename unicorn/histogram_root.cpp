@@ -50,7 +50,7 @@ struct hist_elem HistogramRoot::construct_hist_elem(unsigned long label) {
 /* Decay values in the histogram map, and record the sketch to the 
  * file @fp, if WINDOW updates have performed (if WINDOW is used). */
 void HistogramRoot::decay(FILE* fp) {
-    this->histogram_map_lock.lock();
+    this->histogram_root_map_lock.lock();
     this->t++;
 #ifdef USEWINDOW
     this->w++;
@@ -83,14 +83,14 @@ void HistogramRoot::decay(FILE* fp) {
 #endif
     }
 #endif
-    this->histogram_map_lock.unlock();
+    this->histogram_root_map_lock.unlock();
 }
 /* Insert @label to the histogram if it does not exist; otherwise, update its value.
  * If @base true, we do not update hash value; we only update them during streaming.
  * We do not decay the histogram or the sketch in this function. */
 void HistogramRoot::update(unsigned long label, bool base, double counter = 1) {
 
-    this->histogram_map_lock.lock();
+    this->histogram_root_map_lock.lock();
     /* We add the new element or update the existing element in the
      * histogram. This is done both in base and stream graph. */
     std::pair<std::map<unsigned long, double>::iterator, bool> rst;
@@ -145,7 +145,7 @@ void HistogramRoot::update(unsigned long label, bool base, double counter = 1) {
 	}
 #endif
     }
-    this->histogram_map_lock.unlock();
+    this->histogram_root_map_lock.unlock();
     return;
 }
 
@@ -153,7 +153,7 @@ void HistogramRoot::update(unsigned long label, bool base, double counter = 1) {
  * This function is called only once during initialization. If MEMORY is set to 1, we also
  * pre-sample some random values to speed up computations later. */
 void HistogramRoot::create_sketch() {
-    this->histogram_map_lock.lock();
+    this->histogram_root_map_lock.lock();
 #ifndef MEMORY
     /* If we decide not to pre-sample, we can still optimize a bit by
      * locally saving some sketch parameters for to initialize sketched. */
@@ -244,18 +244,18 @@ void HistogramRoot::create_sketch() {
 	this->hash[i] = a_i;
     }
 #endif
-    this->histogram_map_lock.unlock();
+    this->histogram_root_map_lock.unlock();
     return;
 }
 
 /* Write the sketch to the file @fp. */
 void HistogramRoot::record_sketch(FILE* fp) {
-    this->histogram_map_lock.lock();
+    this->histogram_root_map_lock.lock();
     for (int i = 0; i < SKETCH_SIZE_ROOT; i++) {
         fprintf(fp,"%lu ", this->sketch[i]);
     }
     fprintf(fp, "\n");
-    this->histogram_map_lock.unlock();
+    this->histogram_root_map_lock.unlock();
     return;
 }
 
