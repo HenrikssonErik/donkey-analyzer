@@ -605,7 +605,7 @@ namespace graphchi {
 			Root pair = fromArray[i];
 	
 			if (pair.root == 0) {
-				continue; 
+				break; //end of list reach if we see a 0 root
 			} else if (seenRoots.find(pair.root) == seenRoots.end()) { //to avoid duplicate roots
 				if (pair.tme < edgeTme){ //only update edges that has been created after the root was created
 					seenRoots.insert(pair.root);  // Mark root as seen
@@ -633,7 +633,7 @@ namespace graphchi {
 			Root pair = {updateArray[i]};
 	
 			if (pair.root == 0) {
-				continue;
+				break; //end of list reach if we see a 0 root
 			} else if (seenRoots.find(pair.root) == seenRoots.end()) { //to avoid duplicate roots
 				seenRoots.insert(pair.root);  // Mark root as seen
 				validPairs.push_back(pair);   // Store unique valid values
@@ -762,7 +762,9 @@ namespace graphchi {
 			if (root.root != 0){
 				unsigned long rootHash = root.root;  // will convert the value to a unsinged long
 				histRoot->update(rootHash, base);
-			} //add the root counts to the histogram by incrementing the value with COUNTER amount
+			}else{
+				break; //if we encounter a 0 root we have reached the end of line
+			}
 		}
 	}
 	
