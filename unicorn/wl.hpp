@@ -787,9 +787,10 @@ namespace graphchi {
 				if(el.roots[0].root != 0){
 					updatedRoots = updatedRoots || updateRoots(nl.roots, el.roots, el.tme[0]);
 				}else{
+					/*
 					if(! gcontext.scheduler->is_scheduled(in_edge->vertex_id())){ //to avoid exessive scheduling
 					gcontext.scheduler->add_task(in_edge->vertex_id(), true);
-					}
+					}*/
 				}
 			}
 		
@@ -801,11 +802,11 @@ namespace graphchi {
 					EdgeDataType el = out_edge->get_data();
 					updatedSpecificEdge =  updateRoots(el.roots, nl.roots, el.tme[0]);
 					out_edge->set_data(el);
-					if (updatedRoots && updatedSpecificEdge){ //some edges that hasnt recieved an update might be scheduled nonetheless. Should be ok
+					/*if (updatedRoots && updatedSpecificEdge){ //some edges that hasnt recieved an update might be scheduled nonetheless. Should be ok
 						if(! gcontext.scheduler->is_scheduled(out_edge->vertex_id())){ //to avoid exessive scheduling
 							gcontext.scheduler->add_task(out_edge->vertex_id(), false);
 						}
-					}
+					}*/
 				}
 			}
 
