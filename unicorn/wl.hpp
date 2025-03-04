@@ -128,22 +128,24 @@ namespace graphchi {
 		 * will not be added to the graph. If CHUNKIFY is set, we will also segment
 		 * the concatenated string. That is, we may add multiple entries to the map 
 		 * for one string. */
-                std::vector<EdgeDataType> neighborhood; /* We reuse edge_label struct vector to store the neighborhood values. */
-				VertexDataType nl = vertex.get_data();
-				/*if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
-					updateRootOrderAndAddToRoots(nl.roots, vertex.id());
-				} */
+			std::vector<EdgeDataType> neighborhood; /* We reuse edge_label struct vector to store the neighborhood values. */
+			VertexDataType nl = vertex.get_data();
+			/*if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
+				updateRootOrderAndAddToRoots(nl.roots, vertex.id());
+			} */
 				for (int i = 0; i < vertex.num_inedges(); i++) {
                     graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
-		    EdgeDataType el = in_edge->get_data();
-		    assert(el.itr == gcontext.iteration);	/* During base graph iteration, edge itr value should be the same as gcontext iteration value before the update. */
-		    neighborhood.push_back(el); // add edges to be processed again
-		    /* We will use those edges so increment the itr count by 1 and update the edge. */
-		    el.itr++;
-			//updateRoots(nl.roots, el.roots);
-		    in_edge->set_data(el);
-			vertex.set_data(nl);
+					EdgeDataType el = in_edge->get_data();
+					assert(el.itr == gcontext.iteration);	/* During base graph iteration, edge itr value should be the same as gcontext iteration value before the update. */
+					neighborhood.push_back(el); // add edges to be processed again
+					/* We will use those edges so increment the itr count by 1 and update the edge. */
+					el.itr++;
+					//updateRoots(nl.roots, el.roots);
+					in_edge->set_data(el);
+					vertex.set_data(nl);
 		}
+
+		//VertexDataType nl = vertex.get_data();
 
 		if (neighborhood.size() == 0) {
                     /* The vertex could also be a node in the base graph that
@@ -334,7 +336,7 @@ namespace graphchi {
 			VertexDataType nl = vertex.get_data();
 			nl.lb[0] = edge->get_data().dst;
 			nl.tm[0] = 0;
-			//vertex.set_data(nl); 
+			vertex.set_data(nl); 
 			//TODO: add "AddRoot()" here same as doneat the top
 
 			/*if(vertex.num_inedges() == 0 || (vertex.num_inedges() == 1 && vertex.inedge(0)->vertex_id() == 0)){
@@ -352,7 +354,7 @@ namespace graphchi {
 				//updateRoots(nl.roots, el.roots); //TODO: optimize to collect all roots in set and update once
 				in_edge->set_data(el);
 				}
-			vertex.set_data(nl);
+			//vertex.set_data(nl);
 
 			for (int i = 0; i < vertex.num_outedges(); i++) {
 			    graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
@@ -404,6 +406,23 @@ namespace graphchi {
 		    if (nl.is_leaf)
 			/* If this node used to be a leaf node. */
 			nl.is_leaf = false;
+
+			/* In the case where a new edge occurs between two existing
+		     * nodes, the edge needs to be sync'ed with the node.
+		     * Some repetitive work may have occurred in the following
+		     * loop; we have to do it because we don't know which edge
+		     * has not been assigned yet. */
+		    for (int i = 0; i < vertex.num_outedges(); i++) {
+				graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
+				EdgeDataType el = out_edge->get_data();
+				for (int j = 1; j < K_HOPS + 1; j++) {
+					el.src[j] = nl.lb[j];
+					el.tme[j] = nl.tm[j];
+				}
+				//el.roots.insert(nl.roots.begin(), nl.roots.end());
+				//updateRoots(el.roots, nl.roots);
+				out_edge->set_data(el);
+				}
 		    
 		    /* Change all incoming edges whose itr count is 0 to 1.
 		     * At the same time, find the minimum itr among all inedges.*/
@@ -424,22 +443,6 @@ namespace graphchi {
 		     * should be at least 1, but less than K_HOPS + 2. */
 		    assert(min_itr > 0 && min_itr < K_HOPS + 2);
 
-			/* In the case where a new edge occurs between two existing
-		     * nodes, the edge needs to be sync'ed with the node.
-		     * Some repetitive work may have occurred in the following
-		     * loop; we have to do it because we don't know which edge
-		     * has not been assigned yet. */
-		    for (int i = 0; i < vertex.num_outedges(); i++) {
-				graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
-				EdgeDataType el = out_edge->get_data();
-				for (int j = 1; j < K_HOPS + 1; j++) {
-					el.src[j] = nl.lb[j];
-					el.tme[j] = nl.tm[j];
-				}
-				//el.roots.insert(nl.roots.begin(), nl.roots.end());
-				//updateRoots(el.roots, nl.roots);
-				out_edge->set_data(el);
-				}
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "The min_itr of the vertex (" << vertex.id() << ") is: " << min_itr << std::endl;
 #endif
