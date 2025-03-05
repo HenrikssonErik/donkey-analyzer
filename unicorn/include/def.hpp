@@ -73,6 +73,7 @@ extern std::string HIST_FILE;
  * - "new_src": whether the source node is new, never-before-seen.
  * - "new_dst": whether the destination node is new. never-before-seen.
  */
+//TODO: REMOVE and import instead
 struct Root {
 	uint32_t root;
 	uint32_t order;
