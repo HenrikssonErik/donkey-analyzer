@@ -44,7 +44,7 @@ public:
     void decay();
     void update(unsigned long label, bool update_hash);
     void create_sketch();
-    void record_sketch();
+    void record_sketch(std::vector<unsigned long> sketch);
     unsigned long* get_sketch();
 
 private:
@@ -57,7 +57,7 @@ private:
         this->powerful = pow(M_E, -lambda);
         
         // Initialize object length with zeros
-        sketch = std::vector<unsigned long>(sketchSize, 0);
+        root_sketch = std::vector<unsigned long>(sketchSize, 0);
         hash = std::vector<double>(sketchSize, 0.0); 
 
         gamma_param = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
@@ -67,7 +67,7 @@ private:
     }
 
     std::map<unsigned long, double> histogram_map;
-    std::vector<unsigned long> sketch;    // Dynamic size based on sketchSize
+    std::vector<unsigned long> root_sketch;    // Dynamic size based on sketchSize
     std::vector<double> hash; 
     double powerful;
     int preGen; //Decide how many hash values to pre-generate
@@ -82,11 +82,13 @@ private:
     std::vector<std::vector<double>> r_beta_param;  // Vector of vectors of size preGen x sketchSize
     std::vector<std::vector<double>> power_r;
 
-    int t; /* If t reaches DECAY, we decay the values in the histogram and hashed value by e^(-lambda). */
+    int t; /* If t reaches decayIntervall, hashes is decayed. */
     int w; /* window (w) decides when a sketch should be created */
     
-    /* The lock needed to update histogram map. */
+    /* The lock to update histogram map. */
     std::mutex histogram_root_map_lock;
+    /* The lock to modify file. */
+    std::mutex histogram_root_file_lock;
 };
 
 #endif /* __HISTOGRAMROOT_HPP__ */
