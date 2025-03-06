@@ -49,7 +49,7 @@ bool RootHandler::updateRoots(Root updateArray[], Root fromArray[], unsigned lon
         if (pair.root == 0) {
             break; //end of list reach if we see a 0 root
         } else if (seenRoots.find(pair.root) == seenRoots.end()) { //to avoid duplicate roots
-            if (pair.tme < compare_ts){ //only update entities that has been created after the root was created
+            if (pair.tme <= compare_ts){ 
                 seenRoots.insert(pair.root);  // Mark root as seen
                 validPairs.push_back(pair);   // Store unique valid values
             }
@@ -170,7 +170,7 @@ bool RootHandler::isRoot(unsigned long in_edges_ts[], size_t in_edges_size, unsi
 
     if (in_edges_size > 0){
         smallestIn = in_edges_ts[0];
-        for (size_t i = 1; i < in_edges_size; i++) {
+        for (int i = 1; i < in_edges_size; i++) {
             if (in_edges_ts[i] < smallestIn){
                 smallestIn = in_edges_ts[i];
             }
@@ -179,14 +179,14 @@ bool RootHandler::isRoot(unsigned long in_edges_ts[], size_t in_edges_size, unsi
 
     if (out_edges_size > 0){
         smallestOut = out_edges_ts[0];
-        for (size_t i = 1; i < out_edges_size; i++) {
+        for (int i = 1; i < out_edges_size; i++) {
             if (out_edges_ts[i] < smallestOut){
                 smallestOut = out_edges_ts[i];
             }
         }
     }
     //should return true if, no inedges, inedge > outedge
-    if( (smallestOut < smallestIn) || in_edges_size == 0){
+    if( (smallestOut <= smallestIn) || in_edges_size == 0){
         return true;
      }
     return false;		
@@ -207,40 +207,3 @@ void RootHandler::updateOutedgeFromNode(unsigned long edge_ts, Root outedge_root
         this->updateRoots(outedge_roots, node_roots, edge_ts);
     }
 }
-
-/*void RootHandler::fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex){ //take edge list
-    bool updateSelf = false;
-    VertexDataType nl = vertex.get_data();
-
-        if(!nl.rootChecked){
-            if(isRoot(vertex)){
-                updateRootOrderAndAddToRoots(nl.roots, vertex.id(), vertex.get_data().tm[0]);
-                updatedRoots = true;
-            }
-            nl.rootChecked = true;
-        }
-
-        for (int i = 0; i < vertex.num_inedges(); i++) {
-            graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
-            EdgeDataType el = in_edge->get_data();
-            if(el.roots[0].root != 0){
-                updatedRoots = updatedRoots || updateRoots(nl.roots, el.roots, el.tme[0]);
-            }else{
-                
-            }
-        }
-    
-
-        if (nl.roots[0].root != 0){ //unnecessary to run update algo on edges if we have no roots
-            bool updatedSpecificEdge = false;
-            for (int i = 0; i < vertex.num_outedges(); i++) {
-                graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
-                EdgeDataType el = out_edge->get_data();
-                updatedSpecificEdge =  updateRoots(el.roots, nl.roots, el.tme[0]);
-                out_edge->set_data(el);
-                
-            }
-        }
-
-        vertex.set_data(nl);
-    } */
