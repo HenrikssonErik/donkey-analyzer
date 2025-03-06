@@ -39,13 +39,14 @@
 class RootHistogram {
 public:
     static RootHistogram* get_instance(FILE* sketchFile, int preGen = 10000, int sketchSize = 100, int maxWindow = 500, int decayInterval = 10, double lambda = 0.02);
+    static RootHistogram* get_instance();
     ~RootHistogram();
     //struct hist_elem construct_hist_elem(unsigned long label);
     void decay();
     void update(unsigned long label, bool update_hash);
     void create_sketch();
     void record_sketch(std::vector<unsigned long> sketch);
-    unsigned long* get_sketch();
+    std::vector<unsigned long> get_sketch_copy();
 
 private:
     static RootHistogram* rootHistogram;
@@ -91,4 +92,5 @@ private:
     std::mutex histogram_root_file_lock;
 };
 
+#include "../root_histogram.cpp"
 #endif /* __HISTOGRAMROOT_HPP__ */

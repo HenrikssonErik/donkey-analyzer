@@ -2,11 +2,17 @@
 
 
 #include "include/root_handler.hpp"
+#include "include/root_histogram.hpp"
 #include <string>
 #include <set>
 #include <unordered_set>
+#include <cstring>
+#include <algorithm>
+#include <unordered_map>
 
-RootHandler* RootHandler::rootHandler;;
+
+RootHandler* RootHandler::rootHandler;
+std::mutex rootOrderMutex;
 
 // Constructor implementation
 RootHandler* RootHandler::getRootHandlerInstance(int rootListSize, FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda) {
@@ -22,7 +28,14 @@ RootHandler* RootHandler::getRootHandlerInstance(int rootListSize, FILE* sketchF
     return rootHandler;
 }
 
-bool RootHandler::updateRoots(Root updateArray[], Root fromArray[], unsigned long edgeTme) {
+RootHandler* RootHandler::getRootHandlerInstance() {
+    if (!rootHandler) {
+        throw std::runtime_error("RootHandler instance does not exist.");
+    }
+    return rootHandler;
+}
+
+bool RootHandler::updateRoots(Root updateArray[], Root fromArray[], unsigned long compare_ts) {
 		
     std::vector<Root> validPairs;  // Store non-zero unique pairs
     //std::vector<RootPair> zeroPairs;   // Store zero pairs
@@ -30,20 +43,20 @@ bool RootHandler::updateRoots(Root updateArray[], Root fromArray[], unsigned lon
     Root oldArray[this->rootListSize];
     std::memcpy(oldArray, updateArray, sizeof(oldArray));
 
-    for (size_t i = 0; i < this->rootListSize; i++) {
+    for (int i = 0; i < this->rootListSize; i++) {
         Root pair = fromArray[i];
 
         if (pair.root == 0) {
             break; //end of list reach if we see a 0 root
         } else if (seenRoots.find(pair.root) == seenRoots.end()) { //to avoid duplicate roots
-            if (pair.tme < edgeTme){ //only update edges that has been created after the root was created
+            if (pair.tme < compare_ts){ //only update entities that has been created after the root was created
                 seenRoots.insert(pair.root);  // Mark root as seen
                 validPairs.push_back(pair);   // Store unique valid values
             }
         }
     }
 
-    for (size_t i = 0; i < this->rootListSize; i++) {
+    for (int i = 0; i < this->rootListSize; i++) {
         Root pair = {updateArray[i]};
 
         if (pair.root == 0) {
@@ -58,16 +71,16 @@ bool RootHandler::updateRoots(Root updateArray[], Root fromArray[], unsigned lon
         return a.order < b.order;
     });
 
-    size_t index = 0;
-    size_t startIndex = std::max(validPairs.size(), static_cast<size_t>(this->rootListSize)) - this->rootListSize;  
+    int index = 0;
+    size_t startIndex = std::max(validPairs.size(), static_cast<size_t>(this->rootListSize)) - static_cast<size_t>(this->rootListSize);  
 
     // Add the last ROOTS number of valid pairs (from the end of the list)
     for (size_t i = startIndex; i < validPairs.size(); ++i) {
         updateArray[index++] = validPairs[i];
     }
 
-    // Step 4: Fill the remaining space with zero pairs if there is room, this could be done without the objects by just adding zeros to the array.
-    for (size_t i = validPairs.size(); i < this->rootListSize; ++i) {
+    // Fill the remaining space with zero pairs if there is room, this could be done without the objects by just adding zeros to the array.
+    for (int i = validPairs.size(); i < this->rootListSize; ++i) {
         updateArray[index++] = {0,0};   // Add zero for root and index
     }
 
@@ -80,12 +93,12 @@ bool RootHandler::updateRoots(Root updateArray[], Root fromArray[], unsigned lon
     }
 }
 
-std::string RootHandler::rootToPrint( uint32_t currentRoot, Root roots[], const char* delimiter = ",") { 
+std::string RootHandler::rootToPrint( uint32_t currentRoot, Root roots[], const char* delimiter) { 
     std::string result;
     bool firstElement = true;
     
 
-    for (size_t i = 0; i < this->rootListSize; i++) {
+    for (int i = 0; i < this->rootListSize; i++) {
         if (roots[i].root == 0){
             break;
         }  // Skip zero values
@@ -101,46 +114,101 @@ std::string RootHandler::rootToPrint( uint32_t currentRoot, Root roots[], const 
     return result;
 }
 
+/*tme = node creation time*/
 void RootHandler::updateRootOrderAndAddToRoots(Root roots[], uint32_t rootToAdd, unsigned long tme) {
+    static uint32_t rootOrder = 1;
     static std::unordered_map<uint32_t, uint32_t> seenRoots;  // Map to store roots and their corresponding rootOrder
-    //std::lock_guard<std::mutex> lock(rootOrderMutex);  // Lock mutex for both operations
+
     uint32_t rootOrderToAssign = 0;
     if (rootToAdd == 0) {
-        //logstream(LOG_INFO) << "Root is zero, skipping it! For vertex: " << rootToAdd << std::endl;
         rootToAdd = 1; //if we encounter a correct id that is 0, we msut use a
         //return;
     }
     // Check if the root already exists in the set, if so use the existing rootOrder
     if (seenRoots.find(rootToAdd) != seenRoots.end()) {
         rootOrderToAssign = seenRoots[rootToAdd];  // Use the existing rootOrder for this root
-    } else {
+    }else {
         rootOrderMutex.lock(); //lock rootOrder
         rootOrderToAssign = rootOrder;
         seenRoots[rootToAdd] = rootOrder;  // Store the new root and its rootOrder in the map
         rootOrder++;  // Safely increment rootOrder
         rootOrderMutex.unlock(); //unlock rootOrder
-        logstream(LOG_INFO) << "Updated rootOrder: " << rootOrderToAssign << "For vertex: " << rootToAdd << std::endl;
     }
     Root newRoot = {rootToAdd, rootOrderToAssign, tme};
     roots[0] = newRoot;
 }
 
-void RootHandler::updateRootsForHist(Root roots[], bool base) {
-    histRoot->decay(SFP_Root);
-    for (size_t i = 0; i < ROOTS; ++i) {
+void RootHandler::updateRootsForHist(Root roots[], bool update_hash) {
+    RootHistogram* rootHistogram = RootHistogram::get_instance();
+    rootHistogram->decay();
+    for (int i = 0; i < this->rootListSize; ++i) {
         // Assuming nl.lb[0] is used in the update call, and rootHash is defined
         Root root = roots[i];
         if (root.root != 0){
-            unsigned long rootHash = root.root;  // will convert the value to a unsinged long
-            histRoot->update(rootHash, base);
+            unsigned long rootHash = root.root;  // convert the value to a unsinged long
+            rootHistogram->update(rootHash, update_hash);
         }else{
             break; //if we encounter a 0 root we have reached the end of line
         }
     }
 }
 
-void RootHandler::fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex, graphchi_context &gcontext){ //take edge list
-    bool updatedRoots = false;
+//Public
+void RootHandler::checkAndAssignRoot(NodeInfo& nodeInfo, Root nodeRoots[], unsigned long in_edges_ts[], size_t in_edges_size, unsigned long out_edges_ts[], size_t out_edges_size){
+    if(!nodeInfo.checkedIfRoot){
+        if(this->isRoot(in_edges_ts, in_edges_size, out_edges_ts, out_edges_size)){
+            updateRootOrderAndAddToRoots(nodeRoots, nodeInfo.root_id, nodeInfo.node_ts);
+        }
+        nodeInfo.checkedIfRoot = true;
+    }
+}
+
+bool RootHandler::isRoot(unsigned long in_edges_ts[], size_t in_edges_size, unsigned long out_edges_ts[], size_t out_edges_size){
+
+    unsigned long smallestOut = std::numeric_limits<unsigned long>::max();;
+    unsigned long smallestIn = std::numeric_limits<unsigned long>::max();
+
+    if (in_edges_size > 0){
+        smallestIn = in_edges_ts[0];
+        for (size_t i = 1; i < in_edges_size; i++) {
+            if (in_edges_ts[i] < smallestIn){
+                smallestIn = in_edges_ts[i];
+            }
+        }
+    }
+
+    if (out_edges_size > 0){
+        smallestOut = out_edges_ts[0];
+        for (size_t i = 1; i < out_edges_size; i++) {
+            if (out_edges_ts[i] < smallestOut){
+                smallestOut = out_edges_ts[i];
+            }
+        }
+    }
+    //should return true if, no inedges, inedge > outedge
+    if( (smallestOut < smallestIn) || in_edges_size == 0){
+        return true;
+     }
+    return false;		
+}
+
+/*Takes the node roots and rotos from one inedge
+Updates the root nodes depending on */
+void RootHandler::updateRootsFromInEdges(NodeInfo current_node_info, Root inedge_roots[],Root node_roots[]){
+    if(inedge_roots[0].root != 0){
+        this->updateRoots(node_roots, inedge_roots, current_node_info.node_ts);
+    }
+}
+
+/*Takes the node roots and rotos from one inedge
+Updates the root nodes depending on */
+void RootHandler::updateOutedgeFromNode(unsigned long edge_ts, Root outedge_roots[],Root node_roots[]){
+    if(node_roots[0].root != 0){
+        this->updateRoots(outedge_roots, node_roots, edge_ts);
+    }
+}
+
+/*void RootHandler::fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex){ //take edge list
     bool updateSelf = false;
     VertexDataType nl = vertex.get_data();
 
@@ -158,10 +226,7 @@ void RootHandler::fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex
             if(el.roots[0].root != 0){
                 updatedRoots = updatedRoots || updateRoots(nl.roots, el.roots, el.tme[0]);
             }else{
-                /*
-                if(! gcontext.scheduler->is_scheduled(in_edge->vertex_id())){ //to avoid exessive scheduling
-                gcontext.scheduler->add_task(in_edge->vertex_id(), true);
-                }*/
+                
             }
         }
     
@@ -173,55 +238,9 @@ void RootHandler::fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex
                 EdgeDataType el = out_edge->get_data();
                 updatedSpecificEdge =  updateRoots(el.roots, nl.roots, el.tme[0]);
                 out_edge->set_data(el);
-                /*if (updatedRoots && updatedSpecificEdge){ //some edges that hasnt recieved an update might be scheduled nonetheless. Should be ok
-                    if(! gcontext.scheduler->is_scheduled(out_edge->vertex_id())){ //to avoid exessive scheduling
-                        gcontext.scheduler->add_task(out_edge->vertex_id(), false);
-                    }
-                }*/
+                
             }
         }
 
-        /*if(updatedRoots){
-            logstream(LOG_INFO) << "Roots have been updated! Re-scheduled out-edges! (Vertex " << vertex.id() << ")" << std::endl;
-        }*/
-
-            vertex.set_data(nl);
-            //rootToPrint(vertex.id(), vertex.get_data().roots, gcontext);
-    }
-
-bool RootHandler::isRoot(graphchi_vertex<VertexDataType, EdgeDataType> &vertex){
-
-    unsigned long smallestOut = 0;
-    unsigned long smallestIn = 0;
-
-    if (vertex.num_inedges() > 0){
-        graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(0);
-        EdgeDataType el = in_edge->get_data();
-        smallestIn = el.tme[0];
-        for (int i = 1; i < vertex.num_inedges(); i++) {
-            graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
-            EdgeDataType el = in_edge->get_data();
-            if (el.tme[0] < smallestIn){
-                smallestIn = el.tme[0];
-            }
-        }
-    }
-
-    if (vertex.num_outedges() > 0){
-        graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(0);
-        EdgeDataType el = out_edge->get_data();
-        smallestOut = el.tme[0];
-        for (int i = 1; i < vertex.num_outedges(); i++) {
-            graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
-            EdgeDataType el = out_edge->get_data();
-            if (el.tme[0] < smallestOut){
-                smallestOut = el.tme[0];
-            }
-        }
-    }
-    //should return true if, no inedges, inedge > outedge
-    if((smallestOut != 0 && (smallestOut < smallestIn)) || vertex.num_inedges() == 0){
-        return true;
-     }
-    return false;		
-}
+        vertex.set_data(nl);
+    } */

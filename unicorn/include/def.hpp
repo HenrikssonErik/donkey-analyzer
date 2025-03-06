@@ -21,6 +21,7 @@
 #include <string>
 #include <set>
 #include <cstdint>
+#include <root_handler/include/root_handler.hpp>
 
 /* NOTE: SKETCH_SIZE and K_HOPS are compilation
  * constant defined using -D flags. */
@@ -73,12 +74,6 @@ extern std::string HIST_FILE;
  * - "new_src": whether the source node is new, never-before-seen.
  * - "new_dst": whether the destination node is new. never-before-seen.
  */
-//TODO: REMOVE and import instead
-struct Root {
-	uint32_t root;
-	uint32_t order;
-    unsigned long tme;
-};
 
 typedef struct edge_label {
     /* We use K_HOPS+1 because the first element is itself and
@@ -99,8 +94,8 @@ typedef struct node_label {
     unsigned long lb[K_HOPS+1];
     unsigned long tm[K_HOPS+1];
     bool is_leaf;
-    Root roots[ROOTS] ={};
-    bool rootChecked = false;
+    Root roots[ROOTS] = {};
+    NodeInfo nodeInfo;
 } VertexDataType;
 
 /* Each histogram element is associated with r, beta, c, which

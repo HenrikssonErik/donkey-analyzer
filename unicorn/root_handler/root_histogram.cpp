@@ -30,11 +30,17 @@
  RootHistogram* RootHistogram::rootHistogram;
  
 //Singleton
-RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen = 10000, int sketchSize = 50, int maxWindow = 500, int decayInterval = 10, double lambda = 0.02) {
+RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda) {
      if (!rootHistogram)
         rootHistogram = new RootHistogram(sketchFile, preGen, sketchSize, maxWindow, decayInterval, lambda);
      return rootHistogram;
  }
+
+ RootHistogram* RootHistogram::get_instance() {
+    if (!rootHistogram)
+    throw std::runtime_error("RootHandler instance does not exist.");
+    return rootHistogram;
+}
  
  RootHistogram::~RootHistogram() {
      delete rootHistogram;
@@ -104,7 +110,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen = 10000,
                 double rb = this->r_beta_param[betaPos][i];
                 double pwr_r = this->power_r[betaPos][i];
                 double y = histValue / rb;
-                double hashValue = this->gamma_param[gammaPos][i] / (y * pwr_r);
+                double hashValue = c / (y * pwr_r);
                 /* If the hash is smaller than the existing value,
             * we replace the hash value and change the sketch value. */
             if (hashValue < this->hash[i]) {
@@ -122,18 +128,18 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen = 10000,
  void RootHistogram::create_sketch() {
      /* Sample variables. */
      srand(36); /* Set a seed. */
-     for (unsigned long i = 0; i < preGen; i++) {
+     for (int i = 0; i < preGen; i++) {
          int randomized_i = rand();
      std::default_random_engine r_generator(randomized_i);
      std::default_random_engine beta_generator(randomized_i);
  
      for (int j = 0; j < sketchSize; j++) {
-         this->gamma_param[i][j] = gamma_dist(r_generator);
-         double uniform_param = uniform_dist(beta_generator);
+         this->gamma_param[i][j] = root_gamma_dist(r_generator);
+         double uniform_param = root_uniform_dist(beta_generator);
          this->r_beta_param[i][j] = pow(M_E, this->gamma_param[i][j] * uniform_param);
          this->power_r[i][j] = pow(M_E, this->gamma_param[i][j]);
      }
-     gamma_dist.reset();
+     root_gamma_dist.reset();
      }
      this->histogram_root_map_lock.lock();
      /* Build sketch. */
@@ -178,6 +184,11 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen = 10000,
      return;
  }
  
+ //Will return a copy of the sketch
+ std::vector<unsigned long> RootHistogram::get_sketch_copy() {
+    return this->root_sketch;
+}
+
  //Record to file
  void RootHistogram::record_sketch(std::vector<unsigned long> sketch) {
 

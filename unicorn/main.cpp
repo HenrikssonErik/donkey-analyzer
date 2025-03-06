@@ -21,7 +21,7 @@
 #include "include/helper.hpp"
 #include "include/def.hpp"
 #include "include/histogram.hpp"
-#include "include/histogram_root.hpp"
+#include "root_handler/include/root_handler.hpp"
 #include "../extern/extern.hpp"
 #include "wl.hpp"
 /* GraphChi header files we use. */
@@ -76,10 +76,10 @@ void * dynamic_graph_reader(void * info) {
      * the base graph histogram is ready.
      * Get the histogram map singleton. */
     Histogram* hist = Histogram::get_instance();
-    HistogramRoot* histRoot = HistogramRoot::get_instance();
+    RootHandler* root_handler = RootHandler::getRootHandlerInstance(ROOTS, SFP_Root);
     /* Initailize the first sketch of the histogram. */
     hist->create_sketch();
-    histRoot->create_sketch();
+    root_handler->createSketch();
     /* If BASESKETCH is set, we record the first sketch
      * from the base graph. BASESKETCH is recommended to
      * be set if USEWINDOW is also set. Do NOT set
@@ -94,13 +94,11 @@ void * dynamic_graph_reader(void * info) {
     fprintf(SFP, "\n");
 #endif
 
-    if (SFP_Root == NULL)
+    /*if (SFP_Root == NULL)
     logstream(LOG_ERROR) << "Root Sketch file no longer exists..." << std::endl;
-    assert(SFP_Root != NULL);
+    assert(SFP_Root != NULL); */
 #ifdef BASESKETCH
-    for (int i = 0; i < SKETCH_SIZE_ROOT; i++)
-    fprintf(SFP_Root,"%lu ", histRoot->get_sketch()[i]);
-    fprintf(SFP_Root, "\n");
+    root_handler.recordSketch();
 #endif
     /* Open the file for streaming. */
     FILE * f = fopen(stream_file.c_str(), "r");
@@ -142,11 +140,12 @@ void * dynamic_graph_reader(void * info) {
 	    hist->write_histogram();
 #endif
 #endif
+/*
 #ifndef USEWINDOW
 	    for (int i = 0; i < SKETCH_SIZE_ROOT; i++)
 		fprintf(SFP_Root,"%lu ", histRoot->get_sketch()[i]);
 	    fprintf(SFP_Root, "\n");
-#endif
+#endif */
         }
         passed_barrier = true;
 	FIXLINE(s);
@@ -327,6 +326,7 @@ int main(int argc, const char ** argv) {
     }
     assert(SFP != NULL);
 
+    //TODO: move to handler
     /* Open the sketch file to write. */
     SFP_Root = fopen(sketch_file_root.c_str(), "a");
     if (SFP_Root == NULL) {
@@ -357,7 +357,7 @@ int main(int argc, const char ** argv) {
      * sketch that describes the entire graph. */
     /* We append the last sketch to the sketch file. */
     Histogram* hist = Histogram::get_instance();
-    HistogramRoot* histRoot = HistogramRoot::get_instance();
+    RootHandler* root_handler = RootHandler::getRootHandlerInstance();
 #ifdef DEBUG
     logstream(LOG_DEBUG) << "Recording the final graph sketch..." << std::endl;
 #endif
@@ -371,10 +371,11 @@ int main(int argc, const char ** argv) {
         return -1;
     }
 
+    //TODO: move to handler and call handelr function
     if (SFP_Root == NULL)
         logstream(LOG_ERROR) << "Root sketch file no longer exists..." << std::endl;
     assert(SFP_Root != NULL);
-    histRoot->record_sketch(SFP_Root);
+    root_handler->recordSketch();
     /* Once we are done, we close the sketch file. */
     if (ferror(SFP_Root) != 0 || fclose(SFP_Root) != 0) {
         logstream(LOG_ERROR) << "Unable to close the root sketch file: " << sketch_file_root <<  std::endl;
