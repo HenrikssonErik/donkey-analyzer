@@ -76,7 +76,7 @@ void * dynamic_graph_reader(void * info) {
      * the base graph histogram is ready.
      * Get the histogram map singleton. */
     Histogram* hist = Histogram::get_instance();
-    RootHandler* root_handler = RootHandler::getRootHandlerInstance(ROOTS, SFP_Root);
+    RootHandler* root_handler = RootHandler::getRootHandlerInstance();
     /* Initailize the first sketch of the histogram. */
     hist->create_sketch();
     root_handler->createSketch();
@@ -334,6 +334,8 @@ int main(int argc, const char ** argv) {
     }
     assert(SFP_Root != NULL);
 
+    RootHandler* root_handler = RootHandler::getRootHandlerInstance(ROOTS, SFP_Root);
+
     /* Process input file - if not already preprocessed */
     int nshards = convert_if_notexists<EdgeDataType>(base_file, get_option_string("nshards", "auto"));
 
@@ -357,7 +359,7 @@ int main(int argc, const char ** argv) {
      * sketch that describes the entire graph. */
     /* We append the last sketch to the sketch file. */
     Histogram* hist = Histogram::get_instance();
-    RootHandler* root_handler = RootHandler::getRootHandlerInstance();
+    //RootHandler* root_handler = RootHandler::getRootHandlerInstance();
 #ifdef DEBUG
     logstream(LOG_DEBUG) << "Recording the final graph sketch..." << std::endl;
 #endif
@@ -371,7 +373,6 @@ int main(int argc, const char ** argv) {
         return -1;
     }
 
-    //TODO: move to handler and call handelr function
     if (SFP_Root == NULL)
         logstream(LOG_ERROR) << "Root sketch file no longer exists..." << std::endl;
     assert(SFP_Root != NULL);
