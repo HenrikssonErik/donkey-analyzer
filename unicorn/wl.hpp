@@ -558,21 +558,31 @@ namespace graphchi {
 		
 		if(!nl.nodeInfo.checkedIfRoot){
 			//initiate node info variables
-			nl.nodeInfo.node_ts = nl.tm[0];
-			nl.nodeInfo.root_id = vertex.id();
+
+			int minIn = std::numeric_limits<unsigned long>::max();
 
 			for (int i = 0; i < vertex.num_inedges(); i++) {
 				graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 				EdgeDataType el = in_edge->get_data();
 				in_edges_ts[i] = el.tme[0];
+				if(minIn> el.tme[0]){
+					minIn = el.tme[0];
+				}
 			}
+
+			int minOut = std::numeric_limits<unsigned long>::max();
 
 			for (int i = 0; i < vertex.num_outedges(); i++) {
 				graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
 				EdgeDataType el = out_edge->get_data();
 				out_edges_ts[i] = el.tme[0];
+				if(minOut> el.tme[0]){
+					minOut = el.tme[0];
+				}
 			}
-			
+			nl.nodeInfo.node_ts = std::min(minIn, minOut);
+			nl.nodeInfo.root_id = vertex.id();
+
 			root_handler->checkAndAssignRoot(nl.nodeInfo, nl.roots,in_edges_ts , vertex.num_inedges(), out_edges_ts, vertex.num_outedges());
 			vertex.set_data(nl);
 		}
