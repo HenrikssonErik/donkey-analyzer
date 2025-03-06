@@ -32,7 +32,7 @@ private:
 
 public:
     
-    void updateRootsForHist(Root roots[], bool base);
+    void updateRootsForHist(Root roots[], bool base, bool decay);
 
     static RootHandler* getRootHandlerInstance(int rootListSize, FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda);
 

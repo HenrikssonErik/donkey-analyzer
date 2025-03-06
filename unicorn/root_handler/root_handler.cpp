@@ -138,9 +138,11 @@ void RootHandler::updateRootOrderAndAddToRoots(Root roots[], uint32_t rootToAdd,
     roots[0] = newRoot;
 }
 
-void RootHandler::updateRootsForHist(Root roots[], bool update_hash) {
+void RootHandler::updateRootsForHist(Root roots[], bool update_hash, bool decay) {
     RootHistogram* rootHistogram = RootHistogram::get_instance();
-    rootHistogram->decay();
+    if(decay){
+        rootHistogram->decay();
+    }
     for (int i = 0; i < this->rootListSize; ++i) {
         // Assuming nl.lb[0] is used in the update call, and rootHash is defined
         Root root = roots[i];
