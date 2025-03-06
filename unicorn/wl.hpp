@@ -543,7 +543,7 @@ namespace graphchi {
 	}
 
 	void rootBreak() {
-		logstream(LOG_DEBUG)<<"Root found" << std::endl;;
+		logstream(LOG_INFO) << "Root found" << std::endl;
 	}
 
 	void fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex, graphchi_context &gcontext){
@@ -552,6 +552,7 @@ namespace graphchi {
 		if(vertex.id() == 9129){
 			rootBreak();
 		}
+
 		unsigned long in_edges_ts[vertex.num_inedges()];
 		unsigned long out_edges_ts[vertex.num_outedges()];
 		
