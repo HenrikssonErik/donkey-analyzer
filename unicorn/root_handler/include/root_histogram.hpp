@@ -38,7 +38,7 @@
  * Current implementation uses an ordered Map as the histogram. */
 class RootHistogram {
 public:
-    static RootHistogram* get_instance(FILE* sketchFile, int preGen = 10000, int sketchSize = 100, int maxWindow = 500, int decayInterval = 10, double lambda = 0.02);
+    static RootHistogram* get_instance(FILE* sketchFile, int preGen = 10000, int sketchSize = 100, int maxWindow = 200, int decayInterval = 10, double lambda = 0.02);
     static RootHistogram* get_instance();
     ~RootHistogram();
     //struct hist_elem construct_hist_elem(unsigned long label);

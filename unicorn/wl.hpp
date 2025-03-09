@@ -229,7 +229,7 @@ namespace graphchi {
 	    } else {
 		/* We first check if the node is a new node or not so that we can do some initialization.
 		 * The node is new if any of its edges marks the node new. */
-		fixRoots(vertex, gcontext); //TODO:
+		fixRoots(vertex, gcontext);
 		bool is_new = false;
 		for (int i = 0; i < vertex.num_outedges(); i++) {
 		    graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
@@ -277,8 +277,8 @@ namespace graphchi {
 			for (int i = 0; i < K_HOPS + 1; i++) {
 			    hist->decay(SFP);
 			    hist->update(nl.lb[i], false);
-				root_handler->updateRootsForHist(nl.roots, true, true);
 			}
+			root_handler->updateRootsForHist(nl.roots, true, true);
 			/* Populate the labels to all of its out-going edges. */
 			for (int i = 0; i < vertex.num_outedges(); i++) {
 			    graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
