@@ -546,7 +546,9 @@ namespace graphchi {
 		logstream(LOG_INFO) << "Root found" << std::endl;
 	}
 
+	//TODO check this logic
 	void fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex, graphchi_context &gcontext){
+		//TODO: break out to inner logic to function that doesnt need vertex and context for easier testing
 		VertexDataType nl = vertex.get_data();
 
 		if(vertex.id() == 9130 || vertex.id() == 9131){
@@ -565,7 +567,7 @@ namespace graphchi {
 				graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 				EdgeDataType el = in_edge->get_data();
 				in_edges_ts[i] = el.tme[0];
-				if(minIn> el.tme[0]){
+				if(minIn > el.tme[0]){
 					minIn = el.tme[0];
 				}
 			}
@@ -576,14 +578,14 @@ namespace graphchi {
 				graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
 				EdgeDataType el = out_edge->get_data();
 				out_edges_ts[i] = el.tme[0];
-				if(minOut> el.tme[0]){
+				if(minOut > el.tme[0]){
 					minOut = el.tme[0];
 				}
 			}
 			nl.nodeInfo.node_ts = std::min(minIn, minOut);
-			nl.nodeInfo.root_id = vertex.id();
+			nl.nodeInfo.vertex_id = vertex.id();
 
-			root_handler->checkAndAssignRoot(nl.nodeInfo, nl.roots,in_edges_ts , vertex.num_inedges(), out_edges_ts, vertex.num_outedges());
+			root_handler->checkAndAssignRoot(nl.nodeInfo, nl.roots, in_edges_ts , vertex.num_inedges(), out_edges_ts, vertex.num_outedges());
 			vertex.set_data(nl);
 		}
 
@@ -591,6 +593,7 @@ namespace graphchi {
 				graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 				EdgeDataType el = in_edge->get_data();
 				root_handler->updateRootsFromInEdges(nl.nodeInfo, el.roots, nl.roots);
+				in_edge->set_data(el);
 			}
 		
 

@@ -36,7 +36,7 @@ RootHandler* RootHandler::getRootHandlerInstance() {
 }
 
 bool RootHandler::updateRoots(Root updateArray[], Root fromArray[], unsigned long compare_ts) {
-		
+
     std::vector<Root> validPairs;  // Store non-zero unique pairs
     //std::vector<RootPair> zeroPairs;   // Store zero pairs
     std::unordered_set<unsigned long> seenRoots; // Track unique root values
@@ -62,13 +62,15 @@ bool RootHandler::updateRoots(Root updateArray[], Root fromArray[], unsigned lon
         if (pair.root == 0) {
             break; //end of list reach if we see a 0 root
         } else if (seenRoots.find(pair.root) == seenRoots.end()) { //to avoid duplicate roots
-            seenRoots.insert(pair.root);  // Mark root as seen
-            validPairs.push_back(pair);   // Store unique valid values
+            if (pair.tme <= compare_ts){ 
+                seenRoots.insert(pair.root);  // Mark root as seen
+                validPairs.push_back(pair);   // Store unique valid values
+            }
         }
     }
 
     std::sort(validPairs.begin(), validPairs.end(), [](const Root& a, const Root& b) {
-        return a.order < b.order;
+        return a.tme < b.tme;
     });
 
     int index = 0;
@@ -159,7 +161,7 @@ void RootHandler::updateRootsForHist(Root roots[], bool update_hash, bool decay)
 void RootHandler::checkAndAssignRoot(NodeInfo& nodeInfo, Root nodeRoots[], unsigned long in_edges_ts[], size_t in_edges_size, unsigned long out_edges_ts[], size_t out_edges_size){
     if(!nodeInfo.checkedIfRoot){
         if(this->isRoot(in_edges_ts, in_edges_size, out_edges_ts, out_edges_size)){
-            updateRootOrderAndAddToRoots(nodeRoots, nodeInfo.root_id, nodeInfo.node_ts);
+            updateRootOrderAndAddToRoots(nodeRoots, nodeInfo.vertex_id, nodeInfo.node_ts);
         }
         nodeInfo.checkedIfRoot = true;
     }

@@ -13,15 +13,15 @@ struct hist_elem {
 */
 
 struct NodeInfo {
-    uint32_t root_id;
+    uint32_t vertex_id = 0;
     bool checkedIfRoot = false;
-    unsigned long node_ts;
+    unsigned long node_ts = 0;
 };
 
 struct Root {
-	uint32_t root;
-	uint32_t order;
-    unsigned long tme;
+	uint32_t root = 0;
+	uint32_t order = 0;
+    unsigned long tme = 0;
 };
 
 /* Distribution used in locality-sensitive hashing. */

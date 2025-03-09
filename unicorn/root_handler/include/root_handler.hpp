@@ -7,6 +7,7 @@
 #include <vector>
 
 class RootHandler {
+
 private:
     static RootHandler* rootHandler;
     int rootListSize;
@@ -24,13 +25,13 @@ private:
     }
 
     //Private helper methods
-    bool updateRoots(Root updateArray[], Root fromArray[], unsigned long edgeTme);
 
     void updateRootOrderAndAddToRoots(Root roots[], uint32_t rootToAdd, unsigned long tme);
 
     bool isRoot(unsigned long in_edges_ts[], size_t in_edges_size, unsigned long out_edges_ts[], size_t out_edges_size);
 
 public:
+    bool updateRoots(Root updateArray[], Root fromArray[], unsigned long edgeTme);
     
     void updateRootsForHist(Root roots[], bool base, bool decay);
 
@@ -57,6 +58,11 @@ public:
         RootHistogram* rootHistogram = RootHistogram::get_instance();
         std::vector<unsigned long> sketch_copy = rootHistogram->get_sketch_copy();
         rootHistogram->record_sketch(sketch_copy);
+    }
+
+    void printHistogram(){
+        RootHistogram* rootHistogram = RootHistogram::get_instance();
+        rootHistogram->print_histogram();
     }
 
 };
