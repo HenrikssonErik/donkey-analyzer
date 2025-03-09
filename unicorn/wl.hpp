@@ -556,8 +556,8 @@ namespace graphchi {
 			rootBreak();
 		}
 
-		unsigned long in_edges_ts[vertex.num_inedges()];
-		unsigned long out_edges_ts[vertex.num_outedges()];
+		unsigned long in_edges_ts[vertex.num_inedges()] = {};  // All elements initialized to 0
+		unsigned long out_edges_ts[vertex.num_outedges()] = {}; 
 		
 		if(!nl.nodeInfo.checkedIfRoot){
 			//initiate node info variables
@@ -583,7 +583,11 @@ namespace graphchi {
 					minOut = el.tme[0];
 				}
 			}
-			nl.nodeInfo.node_ts = std::min(minIn, minOut);
+			if(minIn < minOut){
+				nl.nodeInfo.node_ts = minIn;
+			}else{
+				nl.nodeInfo.node_ts = minOut;
+			}
 			nl.nodeInfo.vertex_id = vertex.id();
 			vertex.set_data(nl);
 			root_handler->checkAndAssignRoot(nl.nodeInfo, nl.roots, in_edges_ts , vertex.num_inedges(), out_edges_ts, vertex.num_outedges());
