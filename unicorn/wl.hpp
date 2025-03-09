@@ -551,7 +551,8 @@ namespace graphchi {
 		//TODO: break out to inner logic to function that doesnt need vertex and context for easier testing
 		VertexDataType nl = vertex.get_data();
 
-		if(vertex.id() == 9130 || vertex.id() == 9131){
+		//For debugging
+		if(vertex.id() == 9131){
 			rootBreak();
 		}
 

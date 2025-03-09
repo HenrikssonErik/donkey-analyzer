@@ -200,7 +200,7 @@ bool RootHandler::isRoot(unsigned long in_edges_ts[], size_t in_edges_size, unsi
 Updates the root nodes depending on */
 void RootHandler::updateRootsFromInEdges(NodeInfo current_node_info, Root inedge_roots[],Root node_roots[]){
     if(inedge_roots[0].root != 0){
-        this->updateRoots(node_roots, inedge_roots, current_node_info.node_ts);
+        this->updateRoots(node_roots, inedge_roots, std::numeric_limits<unsigned long>::max()); //we use max as ts since we want to take input from all incoming edges
     }
 }
 
@@ -208,6 +208,6 @@ void RootHandler::updateRootsFromInEdges(NodeInfo current_node_info, Root inedge
 Updates the root nodes depending on */
 void RootHandler::updateOutedgeFromNode(unsigned long edge_ts, Root outedge_roots[],Root node_roots[]){
     if(node_roots[0].root != 0){
-        this->updateRoots(outedge_roots, node_roots, edge_ts);
+        this->updateRoots(outedge_roots, node_roots, edge_ts); //here we dont use max to only push roots to nodes that appeared after it was created
     }
 }
