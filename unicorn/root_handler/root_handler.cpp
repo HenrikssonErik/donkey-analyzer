@@ -83,7 +83,7 @@ bool RootHandler::updateRoots(Root updateArray[], Root fromArray[], unsigned lon
 
     // Fill the remaining space with zero pairs if there is room, this could be done without the objects by just adding zeros to the array.
     for (int i = validPairs.size(); i < this->rootListSize; ++i) {
-        updateArray[index++] = {0,0};   // Add zero for root and index
+        updateArray[index++] = {};   // Add zero for root and index
     }
 
     if (std::memcmp(oldArray, updateArray, sizeof(oldArray)) == 0) {
