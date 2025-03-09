@@ -136,7 +136,10 @@ void RootHandler::updateRootOrderAndAddToRoots(Root roots[], uint32_t rootToAdd,
         rootOrder++;  // Safely increment rootOrder
         rootOrderMutex.unlock(); //unlock rootOrder
     }
-    Root newRoot = {rootToAdd, rootOrderToAssign, tme};
+    Root newRoot = {};
+    newRoot.root = rootToAdd;
+    newRoot.order = rootOrderToAssign;
+    newRoot.tme = tme;
     roots[0] = newRoot;
 }
 
