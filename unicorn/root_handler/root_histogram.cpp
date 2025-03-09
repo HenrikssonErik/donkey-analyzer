@@ -25,6 +25,7 @@
  #include <random>
  #include <cstdlib>
  #include <string>
+ #include <sstream>
  #include "include/root_histogram.hpp"
  
  RootHistogram* RootHistogram::rootHistogram;
@@ -200,13 +201,16 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
     this-> histogram_root_file_lock.unlock();
 }
 
-void RootHistogram::print_histogram() {
-    std::map<unsigned long, double>::iterator it;
-    logstream(LOG_DEBUG) << "Printing the histogram for debugging..." << std::endl;
-    for (it = this->histogram_map.begin(); it != this->histogram_map.end(); it++)
-        logstream(LOG_DEBUG) << "[" << it->first << "]->" << it->second << "  ";
-    logstream(LOG_DEBUG) << "\n";
-    return;
+std::string RootHistogram::print_histogram() {
+    std::ostringstream oss;
+    oss << "Printing the histogram for debugging...\n";
+
+    for (auto it = histogram_map.begin(); it != histogram_map.end(); ++it) {
+        oss << "[" << it->first << "]->" << it->second << "  ";
+    }
+
+    oss << "\n";
+    return oss.str();
 }
 
  

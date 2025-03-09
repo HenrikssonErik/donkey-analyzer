@@ -384,7 +384,7 @@ int main(int argc, const char ** argv) {
     }
 
     //Print root histogram for debugging
-    root_handler->printHistogram();
+    logstream(LOG_ERROR) << root_handler->printHistogram() << std::endl;
 
     /* Release the barrier resources. */
     int ret_stream = pthread_barrier_destroy(&std::stream_barrier);

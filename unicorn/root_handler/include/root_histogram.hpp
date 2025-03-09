@@ -47,7 +47,7 @@ public:
     void create_sketch();
     void record_sketch(std::vector<unsigned long> sketch);
     std::vector<unsigned long> get_sketch_copy();
-    void print_histogram();
+    std::string print_histogram();
 
 private:
     static RootHistogram* rootHistogram;

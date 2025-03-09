@@ -60,9 +60,9 @@ public:
         rootHistogram->record_sketch(sketch_copy);
     }
 
-    void printHistogram(){
+    std::string printHistogram(){
         RootHistogram* rootHistogram = RootHistogram::get_instance();
-        rootHistogram->print_histogram();
+        return rootHistogram->print_histogram();
     }
 
 };
