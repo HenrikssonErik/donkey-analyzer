@@ -562,7 +562,7 @@ namespace graphchi {
 		if(!nl.nodeInfo.checkedIfRoot){
 			//initiate node info variables
 
-			int minIn = std::numeric_limits<unsigned long>::max();
+			unsigned long minIn = std::numeric_limits<unsigned long>::max();
 
 			for (int i = 0; i < vertex.num_inedges(); i++) {
 				graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
@@ -573,7 +573,7 @@ namespace graphchi {
 				}
 			}
 
-			int minOut = std::numeric_limits<unsigned long>::max();
+			unsigned long minOut = std::numeric_limits<unsigned long>::max();
 
 			for (int i = 0; i < vertex.num_outedges(); i++) {
 				graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
