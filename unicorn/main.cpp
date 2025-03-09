@@ -383,6 +383,9 @@ int main(int argc, const char ** argv) {
         return -1;
     }
 
+    //Print root histogram for debugging
+    root_handler->printHistogram();
+
     /* Release the barrier resources. */
     int ret_stream = pthread_barrier_destroy(&std::stream_barrier);
     int ret_graph = pthread_barrier_destroy(&std::graph_barrier);
