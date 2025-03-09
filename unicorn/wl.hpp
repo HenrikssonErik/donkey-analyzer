@@ -552,7 +552,7 @@ namespace graphchi {
 		VertexDataType nl = vertex.get_data();
 
 		//For debugging
-		if(vertex.id() == 9131){
+		if(vertex.id() == 9129 || vertex.id() == 9131){
 			rootBreak();
 		}
 
@@ -585,7 +585,7 @@ namespace graphchi {
 			}
 			nl.nodeInfo.node_ts = std::min(minIn, minOut);
 			nl.nodeInfo.vertex_id = vertex.id();
-
+			vertex.set_data(nl);
 			root_handler->checkAndAssignRoot(nl.nodeInfo, nl.roots, in_edges_ts , vertex.num_inedges(), out_edges_ts, vertex.num_outedges());
 			vertex.set_data(nl);
 		}
@@ -594,7 +594,8 @@ namespace graphchi {
 				graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 				EdgeDataType el = in_edge->get_data();
 				root_handler->updateRootsFromInEdges(nl.nodeInfo, el.roots, nl.roots);
-				in_edge->set_data(el);
+				//in_edge->set_data(el);
+				vertex.set_data(nl);
 			}
 		
 
