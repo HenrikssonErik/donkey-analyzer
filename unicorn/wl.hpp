@@ -554,13 +554,13 @@ namespace graphchi {
 		//For debugging
 		if(vertex.id() == 9129 || vertex.id() == 9131){
 			rootBreak();
-		}
-
-		unsigned long in_edges_ts[vertex.num_inedges()] = {};  // All elements initialized to 0
-		unsigned long out_edges_ts[vertex.num_outedges()] = {}; 
+		} 
 		
 		if(!nl.nodeInfo.checkedIfRoot){
 			//initiate node info variables
+
+			unsigned long in_edges_ts[vertex.num_inedges()] = {};  // All elements initialized to 0
+			unsigned long out_edges_ts[vertex.num_outedges()] = {};
 
 			unsigned long minIn = std::numeric_limits<unsigned long>::max();
 

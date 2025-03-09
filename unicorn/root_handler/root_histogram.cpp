@@ -75,7 +75,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
          for (it = this->histogram_map.begin(); it != this->histogram_map.end(); it++)
              it->second *= this->powerful;
      /* Decay sketch values. */
-         for (int i = 0; i < sketchSize; i++)
+         for (int i = 0; i < this->sketchSize; i++)
              this->hash[i] *= this->powerful;
          this->t = 0;  /* Reset the timer. */
      }
@@ -102,9 +102,9 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
 
      if(update_hash){
         srand(label);
-        int betaPos = rand() % preGen;
-        int gammaPos = rand() % preGen;
-        for (int i = 0; i < sketchSize; i++) {
+        int betaPos = rand() % this->preGen;
+        int gammaPos = rand() % this->preGen;
+        for (int i = 0; i < this->sketchSize; i++) {
                 /* Compute the new hash value using picked random variables. */
                 double histValue = (root_iterator.first)->second;
                 double c = this->gamma_param[gammaPos][i];
@@ -129,12 +129,12 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
  void RootHistogram::create_sketch() {
      /* Sample variables. */
      srand(36); /* Set a seed. */
-     for (int i = 0; i < preGen; i++) {
-         int randomized_i = rand();
-     std::default_random_engine r_generator(randomized_i);
-     std::default_random_engine beta_generator(randomized_i);
+     for (int i = 0; i < this->preGen; i++) {
+         int random_i = rand();
+     std::default_random_engine r_generator(random_i);
+     std::default_random_engine beta_generator(random_i);
  
-     for (int j = 0; j < sketchSize; j++) {
+     for (int j = 0; j < this->sketchSize; j++) {
          this->gamma_param[i][j] = root_gamma_dist(r_generator);
          double uniform_param = root_uniform_dist(beta_generator);
          this->r_beta_param[i][j] = pow(M_E, this->gamma_param[i][j] * uniform_param);
@@ -144,13 +144,13 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      }
      this->histogram_root_map_lock.lock();
      /* Build sketch. */
-     for (int i = 0; i < sketchSize; i++) {
+     for (int i = 0; i < this->sketchSize; i++) {
          std::map<unsigned long, double>::iterator iterator = this->histogram_map.begin();
      unsigned long label = iterator->first;
  
      srand(label);
-     int betaPos = rand() % preGen;
-     int gammaPos = rand() % preGen;
+     int betaPos = rand() % this->preGen;
+     int gammaPos = rand() % this->preGen;
     
      double rb = this->r_beta_param[betaPos][i];
      double c = this->gamma_param[gammaPos][i];
@@ -163,8 +163,8 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
              label = iterator->first;
  
          srand(label);
-         betaPos = rand() % preGen;
-         gammaPos = rand() % preGen;
+         betaPos = rand() % this->preGen;
+         gammaPos = rand() % this->preGen;
          rb = this->r_beta_param[betaPos][i];
          c = this->gamma_param[gammaPos][i];
          y = iterator->second / rb;
@@ -194,7 +194,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
  void RootHistogram::record_sketch(std::vector<unsigned long> sketch) {
 
     this->histogram_root_file_lock.lock();
-    for (int i = 0; i < sketchSize; i++) {
+    for (int i = 0; i < this->sketchSize; i++) {
         fprintf(this->sketch_file_pointer, "%lu ", sketch[i]);
     }
     fprintf(this->sketch_file_pointer, "\n");
