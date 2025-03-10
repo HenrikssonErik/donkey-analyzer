@@ -119,7 +119,7 @@ TEST_F(RootHandlerTest, UpdateRoots_Incoming_notRoot) {
     NodeInfo nodeInfo;
     nodeInfo.checkedIfRoot = true;
     nodeInfo.vertex_id = 10;
-    nodeInfo.node_ts =70; 
+    nodeInfo.node_ts =40; 
    
     Root incoming1[10] = {{1, 1, 50}, {2, 2, 60}};
     Root incoming2[10] = {{3, 3, 40}, {4, 4, 70}};
@@ -150,10 +150,30 @@ TEST_F(RootHandlerTest, UpdateRoots_Incoming_notRoot) {
     EXPECT_EQ(ownRoots[3].root, incoming1[1].root);
     EXPECT_EQ(ownRoots[4].root, incoming2[1].root);
     EXPECT_EQ(ownRoots[5].root, 0);
-
-  
 }
 
+TEST_F(RootHandlerTest, UpdateRoots_Incoming_to_many_roots) {
+    NodeInfo nodeInfo;
+    nodeInfo.checkedIfRoot = true;
+    nodeInfo.vertex_id = 10;
+    nodeInfo.node_ts =40; 
+   
+    Root incoming1[10] = {{1, 1, 50}, {2, 2, 60}, {3, 3, 40}, {4, 4, 70}, {5, 5, 20}, {6, 6, 70}};
+    Root ownRoots[10] = {{8, 8, 51}, {9, 9, 59}, {10, 10, 43}, {11, 11, 72}, {12, 12, 22}, {13, 13, 65}};
+    
+    rootHandler->updateRootsFromInEdges(nodeInfo, incoming1, ownRoots);
+
+    EXPECT_EQ(ownRoots[0].root, 3);
+    EXPECT_EQ(ownRoots[1].root, 10);
+    EXPECT_EQ(ownRoots[2].root, 1);
+    EXPECT_EQ(ownRoots[3].root, 8);
+    EXPECT_EQ(ownRoots[4].root, 9);
+    EXPECT_EQ(ownRoots[5].root, 2);
+    EXPECT_EQ(ownRoots[6].root, 13);
+    EXPECT_EQ(ownRoots[7].root, 4);
+    EXPECT_EQ(ownRoots[8].root, 6);
+    EXPECT_EQ(ownRoots[9].root, 11);
+}
 
 TEST_F(RootHandlerTest, RootToPrint) {
     Root roots[3] = {{1, 10}, {2, 20}, {0, 0}};
