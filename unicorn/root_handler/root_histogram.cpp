@@ -104,8 +104,15 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
         srand(label);
         int betaPos = rand() % this->preGen;
         int gammaPos = rand() % this->preGen;
-        for (int i = 0; i < this->sketchSize; i++) {
+        int loopCondition = this->sketchSize;
+
+        std::vector<double> gamma_vector = this->gamma_param[gammaPos];
+        std::vector<double> r_beta_vector = this->r_beta_param[betaPos];
+        std::vector<double> pwr_vector = this->power_r[betaPos];
+
+        for (int i = 0; i < loopCondition; i++) {
                 /* Compute the new hash value using picked random variables. */
+                
                 double c = this->gamma_param[gammaPos][i];
 	    double y = (root_iterator.first)->second / this->r_beta_param[betaPos][i];
 	    double hashValue = c / (y * this->power_r[betaPos][i]);
@@ -115,8 +122,8 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
             if (hashValue < this->hash[i]) {
                     this->hash[i] = hashValue;
             this->root_sketch[i] = (root_iterator.first)->first;
-            }
-        }
+            };
+        };
     }
      this->histogram_root_map_lock.unlock();
      return;
