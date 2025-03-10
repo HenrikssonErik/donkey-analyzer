@@ -383,6 +383,7 @@ int main(int argc, const char ** argv) {
         return -1;
     }
 
+    logstream(LOG_INFO) << root_handler->printSketch() << std::endl;
     //Print root histogram for debugging
     logstream(LOG_INFO) << root_handler->printHistogram() << std::endl;
 

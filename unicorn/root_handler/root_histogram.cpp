@@ -76,13 +76,13 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
              it->second *= this->powerful;
      /* Decay sketch values. */
          for (int i = 0; i < this->sketchSize; i++)
-             this->hash[i] *= this->powerful;
+             this->hash.at(i) *= this->powerful;
          this->t = 0;  /* Reset the timer. */
      }
      /* Record sketch only when t == WINDOW if we use
       * WINDOW as frequency to generate sketches. */
      if (this->w >= this->maxWindow) {
-        record_sketch_internal_nolock(this->root_sketch); //TODO: utilize sketch_copy method and releas the other lock
+        record_sketch_internal_nolock(this->root_sketch);
         this->w = 0; /* Reset the timer. */
      }
      this->histogram_root_map_lock.unlock();
@@ -119,9 +119,9 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
          
                 /* If the hash is smaller than the existing value,
             * we replace the hash value and change the sketch value. */
-            if (hashValue < this->hash[i]) {
-                    this->hash[i] = hashValue;
-            this->root_sketch[i] = (root_iterator.first)->first;
+            if (hashValue < this->hash.at(i)) {
+                    this->hash.at(i) = hashValue;
+            this->root_sketch.at(i) = (root_iterator.first)->first;
             };
         };
     }
@@ -174,8 +174,8 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
          s_i = root_iterator->first;
          }
      }
-     this->root_sketch[i] = s_i;
-     this->hash[i] = a_i;
+     this->root_sketch.at(i) = s_i;
+     this->hash.at(i) = a_i;
      }
  
      this->histogram_root_map_lock.unlock();
@@ -202,7 +202,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
 void RootHistogram::record_sketch_internal_nolock(std::vector<unsigned long> sketch) {
     //this->histogram_root_file_lock.lock();
     for (int i = 0; i < this->sketchSize; i++) {
-        fprintf(this->sketch_file_pointer, "%lu ", sketch[i]);
+        fprintf(this->sketch_file_pointer, "%lu ", sketch.at(i));
     }
     fprintf(this->sketch_file_pointer, "\n");
     //this-> histogram_root_file_lock.unlock();

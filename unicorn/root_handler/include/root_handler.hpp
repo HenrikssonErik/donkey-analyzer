@@ -65,6 +65,31 @@ public:
         return rootHistogram->print_histogram();
     }
 
+    
+std::string sketchToString(const std::vector<unsigned long>& vec) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < vec.size(); ++i) {
+        oss << vec[i];
+        if (i != vec.size() - 1) {
+            oss << " "; // Separate elements with a space
+        }
+    }
+    return oss.str();
+}
+
+std::string printSketch() {
+    RootHistogram* rootHistogram = RootHistogram::get_instance();
+    std::vector<unsigned long> sketch = rootHistogram->get_sketch_copy();
+    std::ostringstream oss;
+    for (size_t i = 0; i < sketch.size(); ++i) {
+        oss << sketch[i];
+        if (i != sketch.size() - 1) {
+            oss << " "; // Separate elements with a space
+        }
+    }
+    return oss.str();
+}
+
 };
 
 #include "../root_handler.cpp"
