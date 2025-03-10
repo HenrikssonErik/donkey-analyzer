@@ -90,13 +90,13 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
  /* Update Root Histogram with new label
     Will not decay or  create sketch
     Set update_has = false to avoid updating hashvalues. Usefull if the histogram should be prefilled with values*/
- void RootHistogram::update(unsigned long label, bool update_hash=true) {
+ void RootHistogram::update(unsigned long label, bool update_hash) {
      std::pair<std::map<unsigned long, double>::iterator, bool> root_iterator;
      double counter = 1;
      this->histogram_root_map_lock.lock();
      root_iterator = this->histogram_map.insert(std::pair<unsigned long, double>(label, counter));
      if (root_iterator.second == false) {
-         (root_iterator.first)->second++;
+         (root_iterator.first)->second += counter;
      }
      /* Update the hash if needed. */
 
@@ -135,12 +135,12 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
     this->histogram_root_map_lock.lock();
      /* Sample variables. */
      srand(36); /* Set a seed. */
-     for (int i = 0; i < this->preGen; i++) {
+     for (unsigned long i = 0; i < (unsigned long) this->preGen; i++) {
          int random_i = rand();
      std::default_random_engine r_generator(random_i);
      std::default_random_engine beta_generator(random_i);
  
-     for (int j = 0; j < this->sketchSize; j++) {
+     for (unsigned int j = 0; j < (unsigned int) this->sketchSize; j++) {
          this->gamma_param[i][j] = root_gamma_dist(r_generator);
          double uniform_param = root_uniform_dist(beta_generator);
          this->r_beta_param[i][j] = pow(M_E, this->gamma_param[i][j] * uniform_param);
@@ -148,32 +148,30 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      }
      root_gamma_dist.reset();
      }
-     
      /* Build sketch. */
-     for (int i = 0; i < this->sketchSize; i++) {
-         std::map<unsigned long, double>::iterator iterator = this->histogram_map.begin();
-     unsigned long label = iterator->first;
+     for (unsigned int i = 0; i < (unsigned int)this->sketchSize; i++) {
+         std::map<unsigned long, double>::iterator root_iterator = this->histogram_map.begin();
+     unsigned long label = root_iterator->first;
  
      srand(label);
      int betaPos = rand() % this->preGen;
      int gammaPos = rand() % this->preGen;
     
-     double y = iterator->second / this->r_beta_param[betaPos][i];
+     double y = root_iterator->second / this->r_beta_param[betaPos][i];
 	double a_i = this->gamma_param[gammaPos][i] / (y * this->power_r[betaPos][i]);
-	unsigned long s_i = iterator->first;
-	
-     for (iterator = this->histogram_map.begin(); iterator != this->histogram_map.end(); iterator++) {
-             label = iterator->first;
+	unsigned long s_i = root_iterator->first;
+     for (root_iterator = this->histogram_map.begin(); root_iterator != this->histogram_map.end(); root_iterator++) {
+             label = root_iterator->first;
  
          srand(label);
          betaPos = rand() % this->preGen;
          gammaPos = rand() % this->preGen;
-         y = iterator->second / this->r_beta_param[betaPos][i];
-	    double a = this->gamma_param[gammaPos][i] / (y * this->power_r[betaPos][i]);
-	    
+ 
+         y = root_iterator->second / this->r_beta_param[betaPos][i];
+         double a = this->gamma_param[gammaPos][i] / (y * this->power_r[betaPos][i]);    
          if (a < a_i) {
                  a_i = a;
-         s_i = iterator->first;
+         s_i = root_iterator->first;
          }
      }
      this->root_sketch[i] = s_i;
@@ -191,13 +189,14 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
 
  //Record to file
  void RootHistogram::record_sketch(std::vector<unsigned long> sketch) {
-
-    this->histogram_root_file_lock.lock();
+    this->histogram_root_map_lock.lock();
+    //this->histogram_root_file_lock.lock();
     for (int i = 0; i < this->sketchSize; i++) {
         fprintf(this->sketch_file_pointer, "%lu ", sketch[i]);
     }
     fprintf(this->sketch_file_pointer, "\n");
-    this-> histogram_root_file_lock.unlock();
+    //this-> histogram_root_file_lock.unlock();
+    this->histogram_root_map_lock.lock();
 }
 
 std::string RootHistogram::print_histogram() {
