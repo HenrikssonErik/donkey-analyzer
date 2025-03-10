@@ -82,7 +82,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      /* Record sketch only when t == WINDOW if we use
       * WINDOW as frequency to generate sketches. */
      if (this->w >= this->maxWindow) {
-        record_sketch(this->root_sketch); //TODO: utilize sketch_copy method and releas the other lock
+        record_sketch_internal_nolock(this->root_sketch); //TODO: utilize sketch_copy method and releas the other lock
         this->w = 0; /* Reset the timer. */
      }
      this->histogram_root_map_lock.unlock();
@@ -196,7 +196,16 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
     }
     fprintf(this->sketch_file_pointer, "\n");
     //this-> histogram_root_file_lock.unlock();
-    this->histogram_root_map_lock.lock();
+    this->histogram_root_map_lock.unlock();
+}
+
+void RootHistogram::record_sketch_internal_nolock(std::vector<unsigned long> sketch) {
+    //this->histogram_root_file_lock.lock();
+    for (int i = 0; i < this->sketchSize; i++) {
+        fprintf(this->sketch_file_pointer, "%lu ", sketch[i]);
+    }
+    fprintf(this->sketch_file_pointer, "\n");
+    //this-> histogram_root_file_lock.unlock();
 }
 
 std::string RootHistogram::print_histogram() {

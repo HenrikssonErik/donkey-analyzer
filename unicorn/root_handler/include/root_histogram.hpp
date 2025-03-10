@@ -51,6 +51,7 @@ public:
 
 private:
     static RootHistogram* rootHistogram;
+    void record_sketch_internal_nolock(std::vector<unsigned long> sketch);
 
     RootHistogram(FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda)
         : preGen(preGen), sketchSize(sketchSize), maxWindow(maxWindow), sketch_file_pointer(sketchFile), decayInterval(decayInterval), lambda(lambda) {
@@ -59,8 +60,9 @@ private:
         this->powerful = pow(M_E, -lambda);
         
         // Initialize object length with zeros
-        root_sketch = std::vector<unsigned long>(sketchSize, 0);
-        hash = std::vector<double>(sketchSize, 0.0); 
+        root_sketch = std::vector<unsigned long>(sketchSize);
+        //hash = std::vector<double>(sketchSize);
+        
 
         gamma_param = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
         r_beta_param = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
