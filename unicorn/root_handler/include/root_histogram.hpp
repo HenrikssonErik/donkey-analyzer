@@ -61,7 +61,7 @@ private:
         
         // Initialize object length with zeros
         root_sketch = std::vector<unsigned long>(sketchSize);
-        //hash = std::vector<double>(sketchSize);
+        hash = std::vector<double>(sketchSize);
         
 
         gamma_param = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
