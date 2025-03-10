@@ -100,18 +100,16 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      }
      /* Update the hash if needed. */
 
-     if(update_hash){
+     if(update_hash){ //Runs if true
         srand(label);
         int betaPos = rand() % this->preGen;
         int gammaPos = rand() % this->preGen;
         for (int i = 0; i < this->sketchSize; i++) {
                 /* Compute the new hash value using picked random variables. */
-                double histValue = (root_iterator.first)->second;
                 double c = this->gamma_param[gammaPos][i];
-                double rb = this->r_beta_param[betaPos][i];
-                double pwr_r = this->power_r[betaPos][i];
-                double y = histValue / rb;
-                double hashValue = c / (y * pwr_r);
+	    double y = (root_iterator.first)->second / this->r_beta_param[betaPos][i];
+	    double hashValue = c / (y * this->power_r[betaPos][i]);
+         
                 /* If the hash is smaller than the existing value,
             * we replace the hash value and change the sketch value. */
             if (hashValue < this->hash[i]) {
@@ -127,6 +125,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
  /* Create and initialize  a sketch.
   * This function should only be called once during.  */
  void RootHistogram::create_sketch() {
+    this->histogram_root_map_lock.lock();
      /* Sample variables. */
      srand(36); /* Set a seed. */
      for (int i = 0; i < this->preGen; i++) {
@@ -142,7 +141,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      }
      root_gamma_dist.reset();
      }
-     this->histogram_root_map_lock.lock();
+     
      /* Build sketch. */
      for (int i = 0; i < this->sketchSize; i++) {
          std::map<unsigned long, double>::iterator iterator = this->histogram_map.begin();
@@ -152,26 +151,19 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      int betaPos = rand() % this->preGen;
      int gammaPos = rand() % this->preGen;
     
-     double rb = this->r_beta_param[betaPos][i];
-     double c = this->gamma_param[gammaPos][i];
-
-     double y = iterator->second / rb;
-     double pw_r = this->power_r[betaPos][i];
-     double a_i = c / (y * pw_r);
-     unsigned long s_i = iterator->first;
+     double y = iterator->second / this->r_beta_param[betaPos][i];
+	double a_i = this->gamma_param[gammaPos][i] / (y * this->power_r[betaPos][i]);
+	unsigned long s_i = iterator->first;
+	
      for (iterator = this->histogram_map.begin(); iterator != this->histogram_map.end(); iterator++) {
              label = iterator->first;
  
          srand(label);
          betaPos = rand() % this->preGen;
          gammaPos = rand() % this->preGen;
-         rb = this->r_beta_param[betaPos][i];
-         c = this->gamma_param[gammaPos][i];
-         y = iterator->second / rb;
-         pw_r = this->power_r[betaPos][i];
- 
-         y = iterator->second / rb;
-         double a = c / (y * pw_r);
+         y = iterator->second / this->r_beta_param[betaPos][i];
+	    double a = this->gamma_param[gammaPos][i] / (y * this->power_r[betaPos][i]);
+	    
          if (a < a_i) {
                  a_i = a;
          s_i = iterator->first;
