@@ -198,6 +198,21 @@ benign_theia: sb
 	rm -rf ../../data/theia-e3/benign/base/0-benign-theia-e3.txt.* \
 	rm -rf ../../data/theia-e3/benign/base/0-benign-theia-e3.txt_* 
 
+benign_theia2: sb
+	mkdir -p ../../data/theia-e3/benign/base_sketch_benign
+	mkdir -p bin/unicorn  # Ensure bin/unicorn is a directory, not a file
+	mkdir -p ../../data/theia-e3/benign/base  # Ensure base is a directory
+	mkdir -p ../../data/theia-e3/benign/stream  # Ensure stream is a directory
+
+	bin/unicorn/main filetype edgelist \
+		base ../../data/theia-e3/benign/base/base-theia-e3-benign-0.txt \
+		stream ../../data/theia-e3/benign/stream/stream-theia-e3-benign-0.txt \
+		decay 3000 lambda 0.02 batch 500 \
+		sketch ../../data/theia-e3/benign/base_sketch_benign/sketch-benign-0.txt \
+		chunkify 1 chunk_size 50
+
+	rm -rf ../../data/theia-e3/benign/base/base-theia-e3-benign-0.txt.*
+	rm -rf ../../data/theia-e3/benign/base/base-theia-e3-benign-0.txt_*
 
 delete_intermediate_darpa: sb
 	number=0 ; while [ $$number -le 49 ] ; do \
