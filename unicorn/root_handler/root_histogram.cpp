@@ -138,7 +138,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
   * This function should only be called once during.  */
  void RootHistogram::create_root_sketch() {
     this->histogram_root_map_lock.lock();
-    if(!sketch_initialized){
+    if(!    this->sketch_initialized){
      /* Sample variables. */
         srand(36); /* Set a seed. */
         for (unsigned long i = 0; i < (unsigned long) this->preGen; i++) {
@@ -183,7 +183,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
         this->root_sketch[i] = s_i;
         this->hash[i] = a_i;
         }
-        rootHistogram->sketch_initialized = true;
+        this->sketch_initialized = true;
     }
  
      this->histogram_root_map_lock.unlock();
