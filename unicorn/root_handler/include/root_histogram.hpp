@@ -84,7 +84,7 @@ private:
 
         power_r = new double*[this-> preGen];
         for (int i = 0; i < preGen; ++i) {
-            gamma_param[i] = new double[this->sketchSize];
+            power_r[i] = new double[this->sketchSize];
         }
     }
 
