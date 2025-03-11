@@ -49,16 +49,9 @@ public:
 
     void updateOutedgeFromNode(unsigned long edge_ts, Root outedge_roots[],Root node_roots[]);
 
-    void createSketch(){
-        RootHistogram* rootHistogram = RootHistogram::get_instance();
-        rootHistogram->create_root_sketch();
-    }
+    void createSketch();
 
-    void recordSketch(){
-        RootHistogram* rootHistogram = RootHistogram::get_instance();
-        unsigned long* sketch_copy = rootHistogram->get_sketch_copy();
-        rootHistogram->record_sketch(sketch_copy);
-    }
+    void recordSketch();
 
     std::string printHistogram(){
         RootHistogram* rootHistogram = RootHistogram::get_instance();

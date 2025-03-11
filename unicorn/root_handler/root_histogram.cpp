@@ -32,14 +32,16 @@
  
 //Singleton
 RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, float lambda) {
-     if (!rootHistogram)
+     if (!rootHistogram){
         rootHistogram = new RootHistogram(sketchFile, preGen, sketchSize, maxWindow, decayInterval, lambda);
-     return rootHistogram;
+     }
+        return rootHistogram;
  }
 
  RootHistogram* RootHistogram::get_instance() {
-    if (!rootHistogram)
-    throw std::runtime_error("RootHandler instance does not exist.");
+    if (!rootHistogram){
+        throw std::runtime_error("RootHandler instance does not exist.");
+    }
     return rootHistogram;
 }
  

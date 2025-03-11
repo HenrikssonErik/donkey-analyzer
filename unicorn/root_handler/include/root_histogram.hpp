@@ -41,7 +41,7 @@ public:
     static RootHistogram* get_instance(FILE* sketchFile, int preGen = 10000, int sketchSize = 100, int maxWindow = 50, int decayInterval = 10, float lambda = 0.02);
     static RootHistogram* get_instance();
     ~RootHistogram();
-    //struct hist_elem construct_hist_elem(unsigned long label);
+    struct hist_elem construct_hist_elem(unsigned long label);
     void decay();
     void update(unsigned long label, bool update_hash);
     void create_root_sketch();
@@ -109,6 +109,12 @@ private:
 
     int t; /* If t reaches decayIntervall, hashes is decayed. */
     int w; /* window (w) decides when a sketch should be created */
+
+    /*struct hist_elem {
+        double* r;
+        double* beta;
+        double* c; 
+    };*/
     
     /* The lock to update histogram map. */
     std::mutex histogram_root_map_lock;

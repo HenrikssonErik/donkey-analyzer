@@ -214,3 +214,14 @@ void RootHandler::updateOutedgeFromNode(unsigned long edge_ts, Root outedge_root
         this->updateRoots(outedge_roots, node_roots, edge_ts); //here we dont use max to only push roots to nodes that appeared after it was created
     }
 }
+
+void RootHandler::createSketch(){
+    RootHistogram* rootHistogram = RootHistogram::get_instance();
+    rootHistogram->create_root_sketch();
+}
+
+void RootHandler::recordSketch(){
+    RootHistogram* rootHistogram = RootHistogram::get_instance();
+    unsigned long* sketch_copy = rootHistogram->get_sketch_copy();
+    rootHistogram->record_sketch(sketch_copy);
+}
