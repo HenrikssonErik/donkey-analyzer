@@ -15,7 +15,7 @@ RootHandler* RootHandler::rootHandler;
 std::mutex rootOrderMutex;
 
 // Constructor implementation
-RootHandler* RootHandler::getRootHandlerInstance(int rootListSize, FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda) {
+RootHandler* RootHandler::getRootHandlerInstance(int rootListSize, FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, float lambda) {
     if (!rootHandler)
         rootHandler = new RootHandler(rootListSize, sketchFile, preGen, sketchSize, maxWindow, decayInterval, lambda);
     return rootHandler;

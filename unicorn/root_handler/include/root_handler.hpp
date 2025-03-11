@@ -12,7 +12,7 @@ private:
     static RootHandler* rootHandler;
     int rootListSize;
 
-    RootHandler(int rootListSize, FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda)
+    RootHandler(int rootListSize, FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, float lambda)
         :rootListSize(rootListSize){
         //Initiate the histogram singleton
         RootHistogram::get_instance(sketchFile, preGen, sketchSize, maxWindow, decayInterval, lambda);
@@ -35,7 +35,7 @@ public:
     
     void updateRootsForHist(Root roots[], bool base, bool decay);
 
-    static RootHandler* getRootHandlerInstance(int rootListSize, FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda);
+    static RootHandler* getRootHandlerInstance(int rootListSize, FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, float lambda);
 
     static RootHandler* getRootHandlerInstance(int rootListSize, FILE* sketchFile);
 

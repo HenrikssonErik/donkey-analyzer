@@ -31,7 +31,7 @@
  RootHistogram* RootHistogram::rootHistogram;
  
 //Singleton
-RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda) {
+RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, float lambda) {
      if (!rootHistogram)
         rootHistogram = new RootHistogram(sketchFile, preGen, sketchSize, maxWindow, decayInterval, lambda);
      return rootHistogram;
