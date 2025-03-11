@@ -74,11 +74,13 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      if (this->t >= this->decayInterval) {
          std::map<unsigned long, double>::iterator it;
      /* Decay histogram values. */
-         for (it = this->histogram_map.begin(); it != this->histogram_map.end(); it++)
+         for (it = this->histogram_map.begin(); it != this->histogram_map.end(); it++){
              it->second *= this->powerful;
+         }
      /* Decay sketch values. */
-         for (int i = 0; i < this->sketchSize; i++)
+         for (int i = 0; i < this->sketchSize; i++){
              this->hash[i] *= this->powerful;
+         }
          this->t = 0;  /* Reset the timer. */
      }
      /* Record sketch only when t == WINDOW if we use
@@ -94,9 +96,9 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
     Will not decay or  create sketch
     Set update_has = false to avoid updating hashvalues. Usefull if the histogram should be prefilled with values*/
  void RootHistogram::update(unsigned long label, bool update_hash) {
-     std::pair<std::map<unsigned long, double>::iterator, bool> root_iterator;
+    this->histogram_root_map_lock.lock(); 
+    std::pair<std::map<unsigned long, double>::iterator, bool> root_iterator;
      double counter = 1;
-     this->histogram_root_map_lock.lock();
      root_iterator = this->histogram_map.insert(std::pair<unsigned long, double>(label, counter));
      if (root_iterator.second == false) {
          (root_iterator.first)->second++;
@@ -144,7 +146,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
         std::default_random_engine r_generator(random_i);
         std::default_random_engine beta_generator(random_i);
     
-        for (unsigned int j = 0; j < (unsigned int) this->sketchSize; j++) {
+        for (int j = 0; j < this->sketchSize; j++) {
             this->gamma_param[i][j] = root_gamma_dist(r_generator);
             double uniform_param = root_uniform_dist(beta_generator);
             this->r_beta_param[i][j] = pow(M_E, this->gamma_param[i][j] * uniform_param);
@@ -153,11 +155,11 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
         root_gamma_dist.reset();
         }
         /* Build sketch. */
-        for (unsigned int i = 0; i < (unsigned int)this->sketchSize; i++) {
+        for (int i = 0; i < this->sketchSize; i++) {
             std::map<unsigned long, double>::iterator root_iterator = this->histogram_map.begin();
-        unsigned long label = root_iterator->first;
+        unsigned long label = root_iterator->first; 
     
-        srand(label);
+        srand(label +1); //+1 to avoid problem with seed resetting generator for node 1 
         int betaPos = rand() % this->preGen;
         int gammaPos = rand() % this->preGen;
         
