@@ -134,6 +134,8 @@ void * dynamic_graph_reader(void * info) {
 	    for (int i = 0; i < SKETCH_SIZE; i++)
 		fprintf(SFP,"%lu ", hist->get_sketch()[i]);
 	    fprintf(SFP, "\n");
+        //TODO: remove if window is used
+        root_handler->recordSketch();
 #ifdef VIZ
 	    /* We output a histogram file (one histogram per file)
 	     * for visualization. */

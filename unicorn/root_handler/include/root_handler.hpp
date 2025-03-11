@@ -51,7 +51,7 @@ public:
 
     void createSketch(){
         RootHistogram* rootHistogram = RootHistogram::get_instance();
-        rootHistogram->create_sketch();
+        rootHistogram->create_root_sketch();
     }
 
     void recordSketch(){

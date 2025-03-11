@@ -81,10 +81,11 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      }
      /* Record sketch only when t == WINDOW if we use
       * WINDOW as frequency to generate sketches. */
-     if (this->w >= this->maxWindow) {
+     //TODO: test to record at every batch instead
+     /*if (this->w >= this->maxWindow) {
         record_sketch_internal_nolock(this->root_sketch);
-        this->w = 0; /* Reset the timer. */
-     }
+        this->w = 0; // Reset the timer.
+     } */
      this->histogram_root_map_lock.unlock();
  }
  /* Update Root Histogram with new label
@@ -96,7 +97,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      this->histogram_root_map_lock.lock();
      root_iterator = this->histogram_map.insert(std::pair<unsigned long, double>(label, counter));
      if (root_iterator.second == false) {
-         (root_iterator.first)->second += counter;
+         (root_iterator.first)->second++;
      }
      /* Update the hash if needed. */
 
@@ -122,8 +123,8 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
             if (hashValue < this->hash[i]) {
                     this->hash[i] = hashValue;
             this->root_sketch[i] = (root_iterator.first)->first;
-            };
-        };
+            }
+        }
     }
      this->histogram_root_map_lock.unlock();
      return;
@@ -131,52 +132,55 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
  
  /* Create and initialize  a sketch.
   * This function should only be called once during.  */
- void RootHistogram::create_sketch() {
+ void RootHistogram::create_root_sketch() {
     this->histogram_root_map_lock.lock();
+    if(!sketch_initialized){
      /* Sample variables. */
-     srand(36); /* Set a seed. */
-     for (unsigned long i = 0; i < (unsigned long) this->preGen; i++) {
-         int random_i = rand();
-     std::default_random_engine r_generator(random_i);
-     std::default_random_engine beta_generator(random_i);
- 
-     for (unsigned int j = 0; j < (unsigned int) this->sketchSize; j++) {
-         this->gamma_param[i][j] = root_gamma_dist(r_generator);
-         double uniform_param = root_uniform_dist(beta_generator);
-         this->r_beta_param[i][j] = pow(M_E, this->gamma_param[i][j] * uniform_param);
-         this->power_r[i][j] = pow(M_E, this->gamma_param[i][j]);
-     }
-     root_gamma_dist.reset();
-     }
-     /* Build sketch. */
-     for (unsigned int i = 0; i < (unsigned int)this->sketchSize; i++) {
-         std::map<unsigned long, double>::iterator root_iterator = this->histogram_map.begin();
-     unsigned long label = root_iterator->first;
- 
-     srand(label);
-     int betaPos = rand() % this->preGen;
-     int gammaPos = rand() % this->preGen;
+        srand(36); /* Set a seed. */
+        for (unsigned long i = 0; i < (unsigned long) this->preGen; i++) {
+            int random_i = rand();
+        std::default_random_engine r_generator(random_i);
+        std::default_random_engine beta_generator(random_i);
     
-     double y = root_iterator->second / this->r_beta_param[betaPos][i];
-	double a_i = this->gamma_param[gammaPos][i] / (y * this->power_r[betaPos][i]);
-	unsigned long s_i = root_iterator->first;
-     for (root_iterator = this->histogram_map.begin(); root_iterator != this->histogram_map.end(); root_iterator++) {
-             label = root_iterator->first;
- 
-         srand(label);
-         betaPos = rand() % this->preGen;
-         gammaPos = rand() % this->preGen;
- 
-         y = root_iterator->second / this->r_beta_param[betaPos][i];
-         double a = this->gamma_param[gammaPos][i] / (y * this->power_r[betaPos][i]);    
-         if (a < a_i) {
-                 a_i = a;
-         s_i = root_iterator->first;
-         }
-     }
-     this->root_sketch[i] = s_i;
-     this->hash[i] = a_i;
-     }
+        for (unsigned int j = 0; j < (unsigned int) this->sketchSize; j++) {
+            this->gamma_param[i][j] = root_gamma_dist(r_generator);
+            double uniform_param = root_uniform_dist(beta_generator);
+            this->r_beta_param[i][j] = pow(M_E, this->gamma_param[i][j] * uniform_param);
+            this->power_r[i][j] = pow(M_E, this->gamma_param[i][j]);
+        }
+        root_gamma_dist.reset();
+        }
+        /* Build sketch. */
+        for (unsigned int i = 0; i < (unsigned int)this->sketchSize; i++) {
+            std::map<unsigned long, double>::iterator root_iterator = this->histogram_map.begin();
+        unsigned long label = root_iterator->first;
+    
+        srand(label);
+        int betaPos = rand() % this->preGen;
+        int gammaPos = rand() % this->preGen;
+        
+        double y = root_iterator->second / this->r_beta_param[betaPos][i];
+        double a_i = this->gamma_param[gammaPos][i] / (y * this->power_r[betaPos][i]);
+        unsigned long s_i = root_iterator->first;
+        for (root_iterator = this->histogram_map.begin(); root_iterator != this->histogram_map.end(); root_iterator++) {
+                label = root_iterator->first;
+    
+            srand(label);
+            betaPos = rand() % this->preGen;
+            gammaPos = rand() % this->preGen;
+    
+            y = root_iterator->second / this->r_beta_param[betaPos][i];
+            double a = this->gamma_param[gammaPos][i] / (y * this->power_r[betaPos][i]);    
+            if (a < a_i) {
+                    a_i = a;
+            s_i = root_iterator->first;
+            }
+        }
+        this->root_sketch[i] = s_i;
+        this->hash[i] = a_i;
+        }
+        rootHistogram->sketch_initialized = true;
+    }
  
      this->histogram_root_map_lock.unlock();
      return;

@@ -38,13 +38,13 @@
  * Current implementation uses an ordered Map as the histogram. */
 class RootHistogram {
 public:
-    static RootHistogram* get_instance(FILE* sketchFile, int preGen = 10000, int sketchSize = 100, int maxWindow = 50, int decayInterval = 10, double lambda = 0.02);
+    static RootHistogram* get_instance(FILE* sketchFile, int preGen = 10000, int sketchSize = 100, int maxWindow = 50, int decayInterval = 10, float lambda = 0.02);
     static RootHistogram* get_instance();
     ~RootHistogram();
     //struct hist_elem construct_hist_elem(unsigned long label);
     void decay();
     void update(unsigned long label, bool update_hash);
-    void create_sketch();
+    void create_root_sketch();
     void record_sketch(unsigned long* sketch);
     unsigned long* get_sketch_copy();
     std::string print_histogram();
@@ -54,11 +54,12 @@ private:
     static RootHistogram* rootHistogram;
     void record_sketch_internal_nolock(unsigned long sketch[]);
 
-    RootHistogram(FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda)
+    RootHistogram(FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, float lambda)
         : preGen(preGen), sketchSize(sketchSize), maxWindow(maxWindow), sketch_file_pointer(sketchFile), decayInterval(decayInterval), lambda(lambda) {
+        
         this->t = 0;
         this->w = 0;
-        this->powerful = pow(M_E, -lambda);
+        this->powerful = pow(M_E, -this->lambda);
         
         // Initialize object length with zeros
         //root_sketch = std::vector<unsigned long>(sketchSize);
@@ -94,8 +95,9 @@ private:
     int sketchSize; //Decide how many values each sketch should contain
     int maxWindow; //Decide how often sketches should be recorded
     int decayInterval; //Decide how much the histogram should decay with
-    double lambda; // Lambda factor used during decay
+    float lambda; // Lambda factor used during decay
     FILE* sketch_file_pointer;
+    bool sketch_initialized = false;
 
     /* Pregenerated samples used for hasing in Sketch creation */
     //std::vector<std::vector<double>> gamma_param;   // Vector of vectors of size preGen x sketchSize
