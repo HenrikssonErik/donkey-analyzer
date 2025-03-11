@@ -163,3 +163,55 @@ benign_mimicry: sb
 		number=`expr $$number + 1` ; \
 	done
 
+benign_darpa: sb
+	cd ../../data/cadets-e3/benign && mkdir -p base_sketch_benign_1 && mkdir -p base_sketch_benign_2 && mkdir -p base_sketch_benign_3
+	number=0 ; while [ $$number -le 49 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/cadets-e3/benign/base/base-benign1-$$number.txt stream ../../data/cadets-e3/benign/stream/stream-benign1-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/cadets-e3/benign/base_sketch_benign_1/sketch-benign1-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign1-$$number.txt.* ; \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign1-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+	number=0 ; while [ $$number -le 9 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/cadets-e3/benign/base/base-benign2-$$number.txt stream ../../data/cadets-e3/benign/stream/stream-benign2-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/cadets-e3/benign/base_sketch_benign_2/sketch-benign2-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign2-$$number.txt.* ; \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign2-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+		number=0 ; while [ $$number -le 49 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/cadets-e3/benign/base/base-benign3-$$number.txt stream ../../data/cadets-e3/benign/stream/stream-benign3-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/cadets-e3/benign/base_sketch_benign_3/sketch-benign3-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign3-$$number.txt.* ; \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign3-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+attack_darpa: sb
+	cd ../../data/cadets-e3/attack && mkdir -p base_sketch_attack
+		number=0 ; while [ $$number -le 2 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/cadets-e3/attack/base/base-attack-$$number.txt stream ../../data/cadets-e3/attack/stream/stream-attack-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/cadets-e3/attack/base_sketch_attack/sketch-attack-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/cadets-e3/attack/base/base-attack-$$number.txt.* ; \
+		rm -rf ../../data/cadets-e3/attack/base/base-attack-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+benign_theia: sb
+	mkdir -p ../../data/theia-e3/benign/base_sketch_benign \
+	bin/unicorn/main filetype edgelist base ../../data/theia-e3/benign/base/benign-theia-e3-0.txt stream ../../data/theia-e3/benign/benign/stream/0-stream-theia-e3-benign.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/theia-e3/benign/base_sketch_benign/sketch-benign-0.txt chunkify 1 chunk_size 50 ; \
+	rm -rf ../../data/theia-e3/benign/base/0-benign-theia-e3.txt.* \
+	rm -rf ../../data/theia-e3/benign/base/0-benign-theia-e3.txt_* 
+
+
+delete_intermediate_darpa: sb
+	number=0 ; while [ $$number -le 49 ] ; do \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign1-$$number.txt.* ; \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign1-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+	number=0 ; while [ $$number -le 9 ] ; do \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign2-$$number.txt.* ; \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign2-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+		number=0 ; while [ $$number -le 49 ] ; do \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign3-$$number.txt.* ; \
+		rm -rf ../../data/cadets-e3/benign/base/base-benign3-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
