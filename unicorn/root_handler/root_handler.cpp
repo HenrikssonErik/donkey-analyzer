@@ -152,7 +152,8 @@ void RootHandler::updateRootsForHist(Root roots[], bool update_hash, bool decay)
         // Assuming nl.lb[0] is used in the update call, and rootHash is defined
         Root root = roots[i];
         if (root.root != 0){
-            unsigned long rootHash = root.root;  // convert the value to a unsinged long
+            //unsigned long rootHash = root.root;  // convert the value to a unsinged long
+            unsigned long rootHash = static_cast<unsigned long>(root.root); 
             rootHistogram->update(rootHash, update_hash);
         }else{
             break; //if we encounter a 0 root we have reached the end of line

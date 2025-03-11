@@ -39,7 +39,7 @@
  * Current implementation uses an ordered Map as the histogram. */
 class RootHistogram {
 public:
-    static RootHistogram* get_instance(FILE* sketchFile, int preGen = 1000, int sketchSize = 100, int maxWindow = 50, int decayInterval = 5, float lambda = 0.02);
+    static RootHistogram* get_instance(FILE* sketchFile, int preGen = 1000, int sketchSize = 100, int maxWindow = 50, int decayInterval = 3000, float lambda = 0.02);
     static RootHistogram* get_instance();
     ~RootHistogram();
     struct hist_elem construct_hist_elem(unsigned long label);
@@ -67,7 +67,7 @@ private:
         //hash = std::vector<double>(sketchSize);
 
         root_sketch = new unsigned long [this->sketchSize];
-        hash = new double[this->sketchSize];
+        root_hash = new double[this->sketchSize];
 
         std::gamma_distribution<double> root_gamma_dist(2.0, 1.0);
         std::uniform_real_distribution<double> root_uniform_dist(0.0, 1.0);
@@ -92,7 +92,7 @@ private:
     //std::vector<unsigned long> root_sketch;    // Dynamic size based on sketchSize
     //std::vector<double> hash;
     unsigned long* root_sketch;
-    double* hash;
+    double* root_hash;
 
     double powerful;
     int preGen; //Decide how many hash values to pre-generate

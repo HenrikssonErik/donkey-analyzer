@@ -79,7 +79,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
          }
      /* Decay sketch values. */
          for (int i = 0; i < this->sketchSize; i++){
-             this->hash[i] *= this->powerful;
+             this->root_hash[i] *= this->powerful;
          }
          this->t = 0;  /* Reset the timer. */
      }
@@ -124,8 +124,8 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
          
                 /* If the hash is smaller than the existing value,
             * we replace the hash value and change the sketch value. */
-            if (hashValue < this->hash[i]) {
-                    this->hash[i] = hashValue;
+            if (hashValue < this->root_hash[i]) {
+                    this->root_hash[i] = hashValue;
             this->root_sketch[i] = (root_iterator.first)->first;
             }
         }
@@ -181,7 +181,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
             }
         }
         this->root_sketch[i] = s_i;
-        this->hash[i] = a_i;
+        this->root_hash[i] = a_i;
         }
         this->sketch_initialized = true;
     }
