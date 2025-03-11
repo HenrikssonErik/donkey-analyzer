@@ -106,7 +106,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
      /* Update the hash if needed. */
 
      if(update_hash){ //Runs if true
-        srand(label);
+        srand(label +1); //+1 to avoid problem with seed resetting generator for node 1 
         int betaPos = rand() % this->preGen;
         int gammaPos = rand() % this->preGen;
         int loopCondition = this->sketchSize;
@@ -169,7 +169,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
         for (root_iterator = this->histogram_map.begin(); root_iterator != this->histogram_map.end(); root_iterator++) {
                 label = root_iterator->first;
     
-            srand(label);
+            srand(label +1); //+1 to avoid problem with seed resetting generator for node 1 
             betaPos = rand() % this->preGen;
             gammaPos = rand() % this->preGen;
     
