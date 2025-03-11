@@ -73,19 +73,14 @@ private:
         //power_r = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
         
         gamma_param = new double*[this-> preGen];
-        for (int i = 0; i < preGen; ++i) {
-            gamma_param[i] = new double[this->sketchSize];
-        }
-
         r_beta_param = new double*[this-> preGen];
-        for (int i = 0; i < preGen; ++i) {
-            gamma_param[i] = new double[this->sketchSize];
-        }
-
         power_r = new double*[this-> preGen];
         for (int i = 0; i < preGen; ++i) {
+            gamma_param[i] = new double[this->sketchSize];
+            r_beta_param[i] = new double[this->sketchSize];
             power_r[i] = new double[this->sketchSize];
         }
+
     }
 
     std::map<unsigned long, double> histogram_map;
