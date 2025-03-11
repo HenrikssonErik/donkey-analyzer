@@ -56,7 +56,7 @@ public:
 
     void recordSketch(){
         RootHistogram* rootHistogram = RootHistogram::get_instance();
-        std::vector<unsigned long> sketch_copy = rootHistogram->get_sketch_copy();
+        unsigned long* sketch_copy = rootHistogram->get_sketch_copy();
         rootHistogram->record_sketch(sketch_copy);
     }
 
@@ -79,12 +79,13 @@ std::string sketchToString(const std::vector<unsigned long>& vec) {
 
 std::string printSketch() {
     RootHistogram* rootHistogram = RootHistogram::get_instance();
-    std::vector<unsigned long> sketch = rootHistogram->get_sketch_copy();
+    unsigned long* sketch = rootHistogram->get_sketch_copy();
+    int sketch_size = rootHistogram->get_sketch_size();
     std::ostringstream oss;
-    for (size_t i = 0; i < sketch.size(); ++i) {
+    for (size_t i = 0; i < sketch_size; ++i) {
         oss << sketch[i];
-        if (i != sketch.size() - 1) {
-            oss << " "; // Separate elements with a space
+        if (i != sketch_size - 1) {
+            oss << ","; // Separate elements
         }
     }
     return oss.str();

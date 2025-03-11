@@ -76,7 +76,7 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
              it->second *= this->powerful;
      /* Decay sketch values. */
          for (int i = 0; i < this->sketchSize; i++)
-             this->hash.at(i) *= this->powerful;
+             this->hash[i] *= this->powerful;
          this->t = 0;  /* Reset the timer. */
      }
      /* Record sketch only when t == WINDOW if we use
@@ -106,22 +106,22 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
         int gammaPos = rand() % this->preGen;
         int loopCondition = this->sketchSize;
 
-        std::vector<double> gamma_vector = this->gamma_param[gammaPos];
-        std::vector<double> r_beta_vector = this->r_beta_param[betaPos];
-        std::vector<double> pwr_vector = this->power_r[betaPos];
+        //std::vector<double> gamma_vector = this->gamma_param[gammaPos];
+        //std::vector<double> r_beta_vector = this->r_beta_param[betaPos];
+        //std::vector<double> pwr_vector = this->power_r[betaPos];
 
         for (int i = 0; i < loopCondition; i++) {
                 /* Compute the new hash value using picked random variables. */
                 
-                double c = this->gamma_param[gammaPos][i];
-	    double y = (root_iterator.first)->second / this->r_beta_param[betaPos][i];
-	    double hashValue = c / (y * this->power_r[betaPos][i]);
+            double c = this->gamma_param[gammaPos][i];
+	        double y = (root_iterator.first)->second / this->r_beta_param[betaPos][i];
+	        double hashValue = c / (y * this->power_r[betaPos][i]);
          
                 /* If the hash is smaller than the existing value,
             * we replace the hash value and change the sketch value. */
-            if (hashValue < this->hash.at(i)) {
-                    this->hash.at(i) = hashValue;
-            this->root_sketch.at(i) = (root_iterator.first)->first;
+            if (hashValue < this->hash[i]) {
+                    this->hash[i] = hashValue;
+            this->root_sketch[i] = (root_iterator.first)->first;
             };
         };
     }
@@ -174,8 +174,8 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
          s_i = root_iterator->first;
          }
      }
-     this->root_sketch.at(i) = s_i;
-     this->hash.at(i) = a_i;
+     this->root_sketch[i] = s_i;
+     this->hash[i] = a_i;
      }
  
      this->histogram_root_map_lock.unlock();
@@ -183,12 +183,16 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
  }
  
  //Will return a copy of the sketch
- std::vector<unsigned long> RootHistogram::get_sketch_copy() {
+ unsigned long* RootHistogram::get_sketch_copy() {
     return this->root_sketch;
 }
 
+int RootHistogram::get_sketch_size() {
+    return this->sketchSize;
+}
+
  //Record to file
- void RootHistogram::record_sketch(std::vector<unsigned long> sketch) {
+ void RootHistogram::record_sketch(unsigned long* sketch) {
     this->histogram_root_map_lock.lock();
     //this->histogram_root_file_lock.lock();
     for (int i = 0; i < this->sketchSize; i++) {
@@ -199,10 +203,10 @@ RootHistogram* RootHistogram::get_instance(FILE* sketchFile, int preGen, int ske
     this->histogram_root_map_lock.unlock();
 }
 
-void RootHistogram::record_sketch_internal_nolock(std::vector<unsigned long> sketch) {
+void RootHistogram::record_sketch_internal_nolock(unsigned long sketch[]) {
     //this->histogram_root_file_lock.lock();
     for (int i = 0; i < this->sketchSize; i++) {
-        fprintf(this->sketch_file_pointer, "%lu ", sketch.at(i));
+        fprintf(this->sketch_file_pointer, "%lu ", sketch[i]);
     }
     fprintf(this->sketch_file_pointer, "\n");
     //this-> histogram_root_file_lock.unlock();

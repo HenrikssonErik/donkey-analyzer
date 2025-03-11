@@ -45,13 +45,14 @@ public:
     void decay();
     void update(unsigned long label, bool update_hash);
     void create_sketch();
-    void record_sketch(std::vector<unsigned long> sketch);
-    std::vector<unsigned long> get_sketch_copy();
+    void record_sketch(unsigned long* sketch);
+    unsigned long* get_sketch_copy();
     std::string print_histogram();
+    int get_sketch_size();
 
 private:
     static RootHistogram* rootHistogram;
-    void record_sketch_internal_nolock(std::vector<unsigned long> sketch);
+    void record_sketch_internal_nolock(unsigned long sketch[]);
 
     RootHistogram(FILE* sketchFile, int preGen, int sketchSize, int maxWindow, int decayInterval, double lambda)
         : preGen(preGen), sketchSize(sketchSize), maxWindow(maxWindow), sketch_file_pointer(sketchFile), decayInterval(decayInterval), lambda(lambda) {
@@ -60,19 +61,39 @@ private:
         this->powerful = pow(M_E, -lambda);
         
         // Initialize object length with zeros
-        root_sketch = std::vector<unsigned long>(sketchSize);
-        hash = std::vector<double>(sketchSize);
+        //root_sketch = std::vector<unsigned long>(sketchSize);
+        //hash = std::vector<double>(sketchSize);
+
+        root_sketch = new unsigned long [this->sketchSize];
+        hash = new double[this->sketchSize];
         
 
-        gamma_param = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
-        r_beta_param = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
-        power_r = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
-    
+        //gamma_param = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
+        //r_beta_param = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
+        //power_r = std::vector<std::vector<double>>(preGen, std::vector<double>(sketchSize, 0.0));
+        
+        gamma_param = new double*[this-> preGen];
+        for (int i = 0; i < preGen; ++i) {
+            gamma_param[i] = new double[this->sketchSize];
+        }
+
+        r_beta_param = new double*[this-> preGen];
+        for (int i = 0; i < preGen; ++i) {
+            gamma_param[i] = new double[this->sketchSize];
+        }
+
+        power_r = new double*[this-> preGen];
+        for (int i = 0; i < preGen; ++i) {
+            gamma_param[i] = new double[this->sketchSize];
+        }
     }
 
     std::map<unsigned long, double> histogram_map;
-    std::vector<unsigned long> root_sketch;    // Dynamic size based on sketchSize
-    std::vector<double> hash; 
+    //std::vector<unsigned long> root_sketch;    // Dynamic size based on sketchSize
+    //std::vector<double> hash;
+    unsigned long* root_sketch;
+    double* hash;
+
     double powerful;
     int preGen; //Decide how many hash values to pre-generate
     int sketchSize; //Decide how many values each sketch should contain
@@ -82,9 +103,12 @@ private:
     FILE* sketch_file_pointer;
 
     /* Pregenerated samples used for hasing in Sketch creation */
-    std::vector<std::vector<double>> gamma_param;   // Vector of vectors of size preGen x sketchSize
-    std::vector<std::vector<double>> r_beta_param;  // Vector of vectors of size preGen x sketchSize
-    std::vector<std::vector<double>> power_r;
+    //std::vector<std::vector<double>> gamma_param;   // Vector of vectors of size preGen x sketchSize
+    //std::vector<std::vector<double>> r_beta_param;  // Vector of vectors of size preGen x sketchSize
+    //std::vector<std::vector<double>> power_r;
+    double** gamma_param;
+    double** r_beta_param;
+    double** power_r;
 
     int t; /* If t reaches decayIntervall, hashes is decayed. */
     int w; /* window (w) decides when a sketch should be created */
