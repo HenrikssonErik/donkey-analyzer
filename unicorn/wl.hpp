@@ -83,7 +83,7 @@ namespace graphchi {
 
 		/* Populate the histogram. */
 		hist->update(nl.lb[0], true);
-		root_handler->updateRootsForHist(nl.roots, false, false);
+		root_handler->updateRootsForHist(nl.roots, true, false);
 
 		/* Schedule itself for the next iteration. */
 		if (gcontext.scheduler != NULL) {
@@ -140,7 +140,7 @@ namespace graphchi {
 #endif
 		    /* Populate the histogram. */
 		    hist->update(last_itr_label, true);
-			root_handler->updateRootsForHist(nl.roots, false, false);
+			root_handler->updateRootsForHist(nl.roots, true, false);
 		    /* Update the vertex's label vector. */
 		    nl.lb[gcontext.iteration] = last_itr_label;
 		    nl.tm[gcontext.iteration] = 0; /* All timestamps of the leaf vertex is set to be 0. */
@@ -190,14 +190,14 @@ namespace graphchi {
 			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
 			//unsigned long rootHash = rootEmbedding(nl.roots);
 			hist->update(new_label, true);
-			root_handler->updateRootsForHist(nl.roots, false, false);
+			root_handler->updateRootsForHist(nl.roots, true, false);
 		    } else {
 			//std::string rootString = rootToString(vertex.id(), vertex.get_data().roots);
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			for (std::vector<unsigned long>::iterator ti = to_insert.begin(); ti != to_insert.end(); ++ti){
 			    hist->update(*ti, true);
 				}
-				root_handler->updateRootsForHist(nl.roots, false, false);
+				root_handler->updateRootsForHist(nl.roots, true, false);
 		    }
 #ifdef DEBUG
 		    logstream(LOG_DEBUG) << "New label of vertex (" << vertex.id() << "): " << new_label << std::endl;
@@ -278,7 +278,7 @@ namespace graphchi {
 			    hist->decay(SFP);
 			    hist->update(nl.lb[i], false);
 			}
-			root_handler->updateRootsForHist(nl.roots, true, true);
+			root_handler->updateRootsForHist(nl.roots, false, true);
 			/* Populate the labels to all of its out-going edges. */
 			for (int i = 0; i < vertex.num_outedges(); i++) {
 			    graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
@@ -327,7 +327,7 @@ namespace graphchi {
 			/* Populate histogram map. */
 			hist->decay(SFP);
 			hist->update(nl.lb[0], false);
-			root_handler->updateRootsForHist(nl.roots, true, true);
+			root_handler->updateRootsForHist(nl.roots, false, true);
 		    }
 		}
 		/* The node is known to the system. */
@@ -447,7 +447,7 @@ namespace graphchi {
 		    if (!CHUNKIFY) {
 			hist->decay(SFP);
 			hist->update(new_label, false);
-			root_handler->updateRootsForHist(nl.roots, true, true);
+			root_handler->updateRootsForHist(nl.roots, false, true);
 		    } else {
 			std::vector<unsigned long> to_insert = chunkify((unsigned char *)new_label_str.c_str(), CHUNK_SIZE);
 			bool first = true;
@@ -458,7 +458,7 @@ namespace graphchi {
 			    }
 			    hist->update(*ti, false);
 			}
-			root_handler->updateRootsForHist(nl.roots, true, true);
+			root_handler->updateRootsForHist(nl.roots, false, true);
 		    }
 		    /* Update the vertex's label*/
 		    nl.lb[min_itr] = new_label;
