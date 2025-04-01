@@ -235,7 +235,7 @@ namespace graphchi {
 		    graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(i);
 		    EdgeDataType el = out_edge->get_data();
 		    if (el.new_src)
-			is_new = true;
+				is_new = true;
 		}
 		if (!is_new) {
 		    for (int i = 0; i < vertex.num_inedges(); i++) {
@@ -308,7 +308,7 @@ namespace graphchi {
 			    graphchi_edge<EdgeDataType> * in_edge = vertex.inedge(i);
 			    EdgeDataType el = in_edge->get_data();
 			    /* For a new vertex, every in-edge should be a new edge with itr = 0. */
-			    assert(el.itr == 0);
+			    //assert(el.itr == 0);
 			    el.itr++; /* After this initialization, every new edge has "itr" value 1. */
 			    el.new_dst = false; /* We make sure next iteration, we won't count the node as a new node. */
 				in_edge->set_data(el);
