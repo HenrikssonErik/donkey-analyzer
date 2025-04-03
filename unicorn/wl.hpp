@@ -97,7 +97,7 @@ namespace graphchi {
 				/* we know after K_HOPS iterations, we will be done with the base graph. */
                 /* After the first iteration, all nodes in the base graph are initialized. 
                  * All edges in the base graph should have "itr" >= 1. */
-				fixRoots(vertex, gcontext); //TODO:
+				fixRoots(vertex, gcontext);
 #ifdef DEBUG
 		/* This is simply a check to make sure that every vertex in the graph
 		 * at this point belongs to the base graph. */
@@ -187,8 +187,6 @@ namespace graphchi {
 		    unsigned long new_label = hash((unsigned char *)new_label_str.c_str());
 		    /* Populate the histogram, depending if we CHUNKIFY or not. */
 		    if (!CHUNKIFY) {
-			//unsigned long rootHash = hash((unsigned char *)rootString.c_str());
-			//unsigned long rootHash = rootEmbedding(nl.roots);
 			hist->update(new_label, true);
 			root_handler->updateRootsForHist(nl.roots, true, false);
 		    } else {
@@ -443,7 +441,6 @@ namespace graphchi {
 		    logstream(LOG_DEBUG) << "New label of the vertex (" << vertex.id() << "): " << new_label << std::endl;
 #endif
 		    /* Populate the histogram. */
-			//TODO
 		    if (!CHUNKIFY) {
 			hist->decay(SFP);
 			hist->update(new_label, false);
@@ -546,15 +543,8 @@ namespace graphchi {
 		logstream(LOG_INFO) << "Root found" << std::endl;
 	}
 
-	//TODO check this logic
 	void fixRoots(graphchi_vertex<VertexDataType, EdgeDataType> &vertex, graphchi_context &gcontext){
-		//TODO: break out to inner logic to function that doesnt need vertex and context for easier testing
 		VertexDataType nl = vertex.get_data();
-
-		//For debugging
-		if(vertex.id() == 9129 || vertex.id() == 9131){
-			rootBreak();
-		} 
 		
 		if(!nl.nodeInfo.checkedIfRoot){
 			//initiate node info variables
