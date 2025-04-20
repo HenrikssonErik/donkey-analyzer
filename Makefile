@@ -163,3 +163,23 @@ benign_mimicry: sb
 		number=`expr $$number + 1` ; \
 	done
 
+attack_h1m_atlas: sb
+	cd ../../data && mkdir -p atlas_attack
+	cd ../../data/atlas_attack_RCA && mkdir -p root_sketches
+
+	number=1 ; while [ $$number -le 6 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/atlasv2/data/attack/h1/cbc-edr/base/atlas-base-h1-attack-m$$number.txt stream ../../data/atlasv2/data/attack/h1/cbc-edr/stream/atlas-stream-h1-attack-m$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/atlas_attack/sketch-atlas-h1-attack-m$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/atlasv2/data/attack/h1/cbc-edr/base/atlas-base-h1-attack-m$$number.txt.* ; \
+		rm -rf ../../data/atlasv2/data/attack/h1/cbc-edr/base/atlas-base-h1-attack-m$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+multiple_mem_complexity: 
+	test -f venv/bin/activate || virtualenv -p $(shell which python) venv
+
+	. venv/bin/activate ; \
+		pip install memory_profiler matplotlib ; \
+		number=1 ; while [ $$number -le 6 ] ; do \
+			mprof run --include-children --output=../../../../Documents/atlas_attack_h1mx-$$number.dat profiler.py; \
+			number=`expr $$number + 1` ; \
+		done
