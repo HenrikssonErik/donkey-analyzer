@@ -179,7 +179,7 @@ multiple_mem_complexity:
 
 	. venv/bin/activate ; \
 		pip install memory_profiler matplotlib ; \
-		number=1 ; while [ $$number -le 6 ] ; do \
-			mprof run --include-children --output=../../../../Documents/atlas_attack_h1mx-$$number.dat profiler.py; \
+		number=1 ; while [ $$number -le 10 ] ; do \
+			mprof run --include-children --output=../../../../Documents/atlas_attack_datfiles/OLD/uni_atlas_attack_$$number.dat profiler.py; \
 			number=`expr $$number + 1` ; \
 		done
