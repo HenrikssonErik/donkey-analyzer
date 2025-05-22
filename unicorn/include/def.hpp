@@ -82,6 +82,7 @@ typedef struct edge_label {
     unsigned long tme[K_HOPS+1];
     unsigned long dst;
     unsigned long edg;
+    uint32_t rootID;
     int itr;
     bool new_src;
     bool new_dst;

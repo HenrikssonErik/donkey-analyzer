@@ -216,6 +216,12 @@ void * dynamic_graph_reader(void * info) {
         assert (k != NULL);
         e.tme[0] = strtoul(k, NULL, 10);
 
+        k = strtok(NULL, delims);
+        if (k == NULL)
+            logstream(LOG_ERROR) << "Root ID is missing." << std::endl;
+        assert (k != NULL);
+        e.rootID = strtoul(k, NULL, 16);
+
 #ifdef DEBUG
         k = strtok(NULL, delims);
         if (k != NULL)
