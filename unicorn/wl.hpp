@@ -582,7 +582,7 @@ namespace graphchi {
 			uint32_t root_id = 0;
 			if (vertex.num_outedges() > 0){
 				graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(0);
-				uint32_t root_id = out_edge->vertexid;
+				root_id = out_edge->vertexid;
 			}
 			
 			nl.nodeInfo.vertex_id = root_id;
