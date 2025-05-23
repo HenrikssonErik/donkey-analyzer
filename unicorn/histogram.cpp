@@ -86,11 +86,11 @@ void Histogram::decay(FILE* fp) {
     this->histogram_map_lock.unlock();
 }
 
-
 /* Insert @label to the histogram if it does not exist; otherwise, update its value.
  * If @base true, we do not update hash value; we only update them during streaming.
  * We do not decay the histogram or the sketch in this function. */
 void Histogram::update(unsigned long label, bool base) {
+
     this->histogram_map_lock.lock();
     /* We add the new element or update the existing element in the
      * histogram. This is done both in base and stream graph. */

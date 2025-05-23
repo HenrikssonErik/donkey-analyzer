@@ -19,6 +19,9 @@
 #include <cmath>
 #include <pthread.h> 
 #include <string>
+#include <set>
+#include <cstdint>
+#include <root_handler/include/root_handler.hpp>
 
 /* NOTE: SKETCH_SIZE and K_HOPS are compilation
  * constant defined using -D flags. */
@@ -45,13 +48,13 @@ extern bool CHUNKIFY;
 extern int CHUNK_SIZE;
 /* Sketch file to write the sketch. */
 extern FILE * SFP;
+extern FILE * SFP_Root;
 #ifdef VIZ
 /* Histogram file path to write histogram values.
  * We write one histogram per file. This is for
  * visualization only since file I/O is costly. */
 extern std::string HIST_FILE;
 #endif
-
 /* In a streaming setting, GraphChi does not allow dynamic vertex/edge type.
  * We therefore must fixed the neighborhood we are exploring.
  * Currently we implement K_HOPS neighborhood.
@@ -71,6 +74,7 @@ extern std::string HIST_FILE;
  * - "new_src": whether the source node is new, never-before-seen.
  * - "new_dst": whether the destination node is new. never-before-seen.
  */
+
 typedef struct edge_label {
     /* We use K_HOPS+1 because the first element is itself and
      * the next K_HOPS are exploration of K_HOPS neighbors. */
@@ -78,9 +82,11 @@ typedef struct edge_label {
     unsigned long tme[K_HOPS+1];
     unsigned long dst;
     unsigned long edg;
+    uint32_t rootID;
     int itr;
     bool new_src;
     bool new_dst;
+    Root roots[ROOTS] = {};
 } EdgeDataType;
 
 /* Node remembers all its most-updated labels "lb" and timestamps "tm".
@@ -89,6 +95,8 @@ typedef struct node_label {
     unsigned long lb[K_HOPS+1];
     unsigned long tm[K_HOPS+1];
     bool is_leaf;
+    Root roots[ROOTS] = {};
+    NodeInfo nodeInfo;
 } VertexDataType;
 
 /* Each histogram element is associated with r, beta, c, which

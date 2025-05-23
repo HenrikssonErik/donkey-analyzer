@@ -23,6 +23,7 @@
 #include "logger/logger.hpp"
 /* Unicorn header file. */
 #include "def.hpp"
+#include <set>
 
 /* We use singleton design to create a single instance of a histogram.
  * This is not thread-safe. A proper locking mechanism is needed.
@@ -33,7 +34,7 @@ public:
     ~Histogram();
     struct hist_elem construct_hist_elem(unsigned long label);
     void decay(FILE* fp);
-    void update(unsigned long label, bool base);
+    void update(unsigned long label,  bool base);
     void create_sketch();
     void record_sketch(FILE* fp);
     unsigned long* get_sketch();
