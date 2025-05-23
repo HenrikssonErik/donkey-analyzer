@@ -578,7 +578,14 @@ namespace graphchi {
 			}else{
 				nl.nodeInfo.node_ts = minOut;
 			}
-			nl.nodeInfo.vertex_id = vertex.id();
+
+			uint32_t root_id = 0;
+			if (vertex.num_outedges() > 0){
+				graphchi_edge<EdgeDataType> * out_edge = vertex.outedge(0);
+				root_id = out_edge->vertexid;
+			}
+			
+			nl.nodeInfo.vertex_id = root_id;
 			vertex.set_data(nl);
 			root_handler->checkAndAssignRoot(nl.nodeInfo, nl.roots, in_edges_ts , vertex.num_inedges(), out_edges_ts, vertex.num_outedges());
 			vertex.set_data(nl);

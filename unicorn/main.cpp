@@ -216,6 +216,16 @@ void * dynamic_graph_reader(void * info) {
         assert (k != NULL);
         e.tme[0] = strtoul(k, NULL, 10);
 
+        k = strtok(NULL, delims);
+        if (k == NULL)
+            logstream(LOG_ERROR) << "Root ID is missing." << std::endl;
+        assert (k != NULL);
+
+        logstream(LOG_INFO) << "Raw rootID string (k): \"" << k << "\"" << std::endl;
+        e.rootID = strtoul(k, NULL, 16);
+        logstream(LOG_INFO) << "Converted rootID (decimal): " << e.rootID << std::endl;
+        logstream(LOG_INFO) << "Converted rootID (hex): 0x" << std::hex << e.rootID << std::dec << std::endl;
+
 #ifdef DEBUG
         k = strtok(NULL, delims);
         if (k != NULL)
