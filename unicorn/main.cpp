@@ -220,13 +220,14 @@ void * dynamic_graph_reader(void * info) {
         if (k == NULL)
             logstream(LOG_ERROR) << "Root ID is missing." << std::endl;
         assert (k != NULL);
-
+#ifdef DEBUG
         logstream(LOG_INFO) << "Raw rootID string (k): \"" << k << "\"" << std::endl;
+#endif
         e.rootID = strtoul(k, NULL, 16);
+#ifdef DEBUG
         logstream(LOG_INFO) << "Converted rootID (decimal): " << e.rootID << std::endl;
         logstream(LOG_INFO) << "Converted rootID (hex): 0x" << std::hex << e.rootID << std::dec << std::endl;
 
-#ifdef DEBUG
         k = strtok(NULL, delims);
         if (k != NULL)
             logstream(LOG_DEBUG) << "Extra info in the edge is ignored." << std::endl;
