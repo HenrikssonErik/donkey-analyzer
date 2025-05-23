@@ -17,9 +17,12 @@ conf/graphchi.cnf.local
 *.la
 *.a
 *~
-
+venv
+pyvenv.cfg
 bin
-
+lib
+lib64
+ttx.1
 # XCode related (from http://stackoverflow.com/questions/49478/git-ignore-file-for-xcode-projects)
 
 #########################

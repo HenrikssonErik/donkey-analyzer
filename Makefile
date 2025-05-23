@@ -202,3 +202,68 @@ benign_mimicry_RCA: sb
 		rm -rf ../../data/mimicry_data_parsed/base_test/mimicry-benign-$$number.txt_* ; \
 		number=`expr $$number + 1` ; \
 	done
+
+train_mimicry_RCA: sb
+	cd ../../data && mkdir -p train_atlas_benign_RCA
+	cd ../../data/train_mimicry_RCA && mkdir -p root_sketches
+	number=0 ; while [ $$number -le 74 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/mimicry_data_parsed/base_train/mimicry-benign-$$number.txt stream ../../data/mimicry_data_parsed/stream_train/stream-benign-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/train_mimicry_RCA/sketch-mimicry_benign-$$number.txt sketch_root ../../data/train_mimicry_RCA/root_sketches/root-sketch-mimicry_benign-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/mimicry_data_parsed/base_train/mimicry-benign-$$number.txt.* ; \
+		rm -rf ../../data/mimicry_data_parsed/base_train/mimicry-benign-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+train_atlas_benign_RCA: sb
+	cd ../../data && mkdir -p train_atlas_benign_RCA
+	cd ../../data/train_atlas_benign_RCA && mkdir -p root_sketches
+
+
+	number=0 ; while [ $$number -le 99 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/atlasv2/data/benign/h2/cbc-edr/split_base/atlas-base-h2-benign-$$number.txt stream ../../data/atlasv2/data/benign/h2/cbc-edr/split_stream/atlas-stream-h2-benign-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/train_atlas_benign_RCA/sketch-atlas-h2-benign-$$number.txt sketch_root ../../data/train_atlas_benign_RCA/root_sketches/root-sketch-atlas-h2-benign-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/atlasv2/data/benign/h2/cbc-edr/split_base/atlas-base-h2-benign-$$number.txt.* ; \
+		rm -rf ../../data/atlasv2/data/benign/h2/cbc-edr/split_base/atlas-base-h2-benign-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+	number=0 ; while [ $$number -le 99 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/atlasv2/data/benign/h1/cbc-edr/split_base/atlas-base-h1-benign-$$number.txt stream ../../data/atlasv2/data/benign/h1/cbc-edr/split_stream/atlas-stream-h1-benign-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/train_atlas_benign_RCA/sketch-atlas-h1-benign-$$number.txt sketch_root ../../data/train_atlas_benign_RCA/root_sketches/root-sketch-atlas-h1-benign-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/atlasv2/data/benign/h1/cbc-edr/split_base/atlas-base-h1-benign-$$number.txt.* ; \
+		rm -rf ../../data/atlasv2/data/benign/h1/cbc-edr/split_base/atlas-base-h1-benign-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+train_atlas_attack_RCA: sb
+	cd ../../data && mkdir -p train_atlas_attack_RCA
+	cd ../../data/train_atlas_attack_RCA && mkdir -p root_sketches
+
+
+	number=1 ; while [ $$number -le 6 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/atlasv2/data/attack/h2/cbc-edr/split_base/atlas-base-h2-attack-m$$number.txt stream ../../data/atlasv2/data/attack/h2/cbc-edr/split_stream/atlas-stream-h2-attack-m$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/train_atlas_attack_RCA/sketch-atlas-h2-attack-m$$number.txt sketch_root ../../data/train_atlas_attack_RCA/root_sketches/root-sketch-atlas-h2-attack-m$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/atlasv2/data/attack/h2/cbc-edr/split_base/atlas-base-h2-attack-m$$number.txt.* ; \
+		rm -rf ../../data/atlasv2/data/attack/h2/cbc-edr/split_base/atlas-base-h2-attack-m$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+	number=1 ; while [ $$number -le 6 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/atlasv2/data/attack/h1/cbc-edr/split_base/atlas-base-h1-attack-m$$number.txt stream ../../data/atlasv2/data/attack/h1/cbc-edr/split_stream/atlas-stream-h1-attack-m$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/train_atlas_attack_RCA/sketch-atlas-h1-attack-m$$number.txt sketch_root ../../data/train_atlas_attack_RCA/root_sketches/root-sketch-atlas-h1-attack-m$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/atlasv2/data/attack/h1/cbc-edr/split_base/atlas-base-h1-attack-m$$number.txt.* ; \
+		rm -rf ../../data/atlasv2/data/attack/h1/cbc-edr/split_base/atlas-base-h1-attack-m$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+	number=1 ; while [ $$number -le 4 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/atlasv2/data/attack/h1/cbc-edr/split_base/atlas-base-h1-attack-s$$number.txt stream ../../data/atlasv2/data/attack/h1/cbc-edr/split_stream/atlas-stream-h1-attack-s$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/train_atlas_attack_RCA/sketch-atlas-h1-attack-s$$number.txt sketch_root ../../data/train_atlas_attack_RCA/root_sketches/root-sketch-atlas-h1-attack-s$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/atlasv2/data/attack/h1/cbc-edr/split_base/atlas-base-h1-attack-s$$number.txt.* ; \
+		rm -rf ../../data/atlasv2/data/attack/h1/cbc-edr/split_base/atlas-base-h1-attack-s$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
+
+train_atlas_mimicry_RCA: sb
+	cd ../../data && mkdir -p train_atlas_mimicry_RCA
+	cd ../../data/train_atlas_mimicry_RCA && mkdir -p root_sketches
+	number=5 ; while [ $$number -le 8 ] ; do \
+		bin/unicorn/main filetype edgelist base ../../data/atlasv2/new_atlas_evasion/base-h1-evasion-$$number.txt stream ../../data/atlasv2/new_atlas_evasion/stream-h1-evasion-$$number.txt decay 3000 lambda 0.02 batch 500 sketch ../../data/train_atlas_mimicry_RCA/sketch-atlas-mimicry-$$number.txt sketch_root ../../data/train_atlas_mimicry_RCA/root_sketches/root-sketch-atlas-mimicry-$$number.txt chunkify 1 chunk_size 50 ; \
+		rm -rf ../../data/atlasv2/new_atlas_evasion/base-h1-evasion-$$number.txt.* ; \
+		rm -rf ../../data/atlasv2/new_atlas_evasion/base-h1-evasion-$$number.txt_* ; \
+		number=`expr $$number + 1` ; \
+	done
